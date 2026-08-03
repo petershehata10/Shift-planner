@@ -362,6 +362,8 @@ function App() {
   const employeeFormRef = useRef(null);
   const calendarInputRef = useRef(null);
   const shiftCalendarInputRef = useRef(null);
+  const backupFileInputRef = useRef(null);
+  const pendingImportModeRef = useRef("replace");
 
   useEffect(() => {
     localStorage.setItem(
@@ -1027,6 +1029,210 @@ function App() {
     );
   }
 
+  function exportAllData() {
+    const backup = {
+      app: "Bread Guy Shift Planner",
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      data: { employees, shifts, departments },
+    };
+
+    const fileDate = toLocalISODate(new Date());
+    const blob = new Blob([JSON.stringify(backup, null, 2)], {
+      type: "application/json",
+    });
+    const downloadUrl = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = downloadUrl;
+    link.download = `bread-guy-shift-backup-${fileDate}.json`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(downloadUrl);
+    showMessage("Backup exported.");
+  }
+
+  function openImportFilePicker(mode) {
+    pendingImportModeRef.current = mode;
+
+    if (backupFileInputRef.current) {
+      backupFileInputRef.current.value = "";
+      backupFileInputRef.current.click();
+    }
+  }
+
+  function validateBackupData(parsedBackup) {
+    const importedData = parsedBackup?.data || parsedBackup;
+
+    if (
+      !importedData ||
+      !Array.isArray(importedData.employees) ||
+      !Array.isArray(importedData.shifts) ||
+      !Array.isArray(importedData.departments)
+    ) {
+      throw new Error("This is not a valid Bread Guy backup file.");
+    }
+
+    return {
+      employees: importedData.employees,
+      shifts: importedData.shifts.map(normalizeShift),
+      departments: normalizeDepartments(importedData.departments),
+    };
+  }
+
+  function mergeBackupData(importedData) {
+    const mergedDepartments = departments.map((department) => ({
+      ...department,
+      tasks: [...department.tasks],
+    }));
+
+    importedData.departments.forEach((importedDepartment) => {
+      const existingDepartment = mergedDepartments.find(
+        (department) => department.id === importedDepartment.id,
+      );
+
+      if (existingDepartment) {
+        existingDepartment.tasks = [
+          ...existingDepartment.tasks,
+          ...importedDepartment.tasks.filter(
+            (task) => !existingDepartment.tasks.includes(task),
+          ),
+        ];
+      } else {
+        mergedDepartments.push(importedDepartment);
+      }
+    });
+
+    const mergedEmployees = employees.map((employee) => ({
+      ...employee,
+      departmentIds: [...employee.departmentIds],
+    }));
+    const importedEmployeeIdMap = new Map();
+
+    importedData.employees.forEach((importedEmployee) => {
+      const normalizedImportedName = importedEmployee.name.trim().toLowerCase();
+      const existingEmployee = mergedEmployees.find(
+        (employee) =>
+          employee.id === importedEmployee.id ||
+          employee.name.trim().toLowerCase() === normalizedImportedName,
+      );
+
+      if (existingEmployee) {
+        existingEmployee.departmentIds = [
+          ...new Set([
+            ...existingEmployee.departmentIds,
+            ...importedEmployee.departmentIds,
+          ]),
+        ];
+        importedEmployeeIdMap.set(
+          Number(importedEmployee.id),
+          Number(existingEmployee.id),
+        );
+      } else {
+        mergedEmployees.push(importedEmployee);
+        importedEmployeeIdMap.set(
+          Number(importedEmployee.id),
+          Number(importedEmployee.id),
+        );
+      }
+    });
+
+    const mergedShifts = [...shifts];
+
+    importedData.shifts.forEach((importedShift) => {
+      const mappedShift = {
+        ...importedShift,
+        employeeId:
+          importedEmployeeIdMap.get(Number(importedShift.employeeId)) ??
+          Number(importedShift.employeeId),
+      };
+
+      const importedSignature = JSON.stringify({
+        employeeId: mappedShift.employeeId,
+        weekStart: mappedShift.weekStart,
+        day: mappedShift.day,
+        start: mappedShift.start,
+        end: mappedShift.end,
+        type: mappedShift.type,
+        departmentId: mappedShift.departmentId,
+        taskAssignments: mappedShift.taskAssignments,
+      });
+
+      const alreadyExists = mergedShifts.some((shift) => {
+        if (shift.id === mappedShift.id) return true;
+
+        const existingSignature = JSON.stringify({
+          employeeId: Number(shift.employeeId),
+          weekStart: shift.weekStart,
+          day: shift.day,
+          start: shift.start,
+          end: shift.end,
+          type: shift.type,
+          departmentId: shift.departmentId,
+          taskAssignments: shift.taskAssignments,
+        });
+
+        return existingSignature === importedSignature;
+      });
+
+      if (!alreadyExists) mergedShifts.push(mappedShift);
+    });
+
+    return {
+      employees: mergedEmployees,
+      shifts: mergedShifts,
+      departments: mergedDepartments,
+    };
+  }
+
+  async function importBackupFile(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const fileText = await file.text();
+      const importedData = validateBackupData(JSON.parse(fileText));
+      const mode = pendingImportModeRef.current;
+
+      if (mode === "replace") {
+        const confirmed = window.confirm(
+          "Replace all current employees, departments, tasks, and schedules with this backup?",
+        );
+        if (!confirmed) return;
+
+        setEmployees(importedData.employees);
+        setShifts(importedData.shifts);
+        setDepartments(importedData.departments);
+        cancelEditingEmployee();
+        cancelEditingShift();
+        showMessage("Backup restored. Current data was replaced.");
+        return;
+      }
+
+      const confirmed = window.confirm(
+        "Merge this backup with the current data? Existing records will be kept and missing records will be added.",
+      );
+      if (!confirmed) return;
+
+      const mergedData = mergeBackupData(importedData);
+      setEmployees(mergedData.employees);
+      setShifts(mergedData.shifts);
+      setDepartments(mergedData.departments);
+      cancelEditingEmployee();
+      cancelEditingShift();
+      showMessage("Backup merged successfully.");
+    } catch (error) {
+      window.alert(
+        error instanceof Error
+          ? error.message
+          : "The backup file could not be imported.",
+      );
+    } finally {
+      event.target.value = "";
+    }
+  }
+
   function clearAllData() {
     if (
       !window.confirm(
@@ -1080,6 +1286,13 @@ function App() {
           </button>
 
           <button
+            className={activePage === "backup" ? "active" : ""}
+            onClick={() => setActivePage("backup")}
+          >
+            Backup & Restore
+          </button>
+
+          <button
             className={activePage === "warnings" ? "active" : ""}
             onClick={() => setActivePage("warnings")}
           >
@@ -1093,6 +1306,14 @@ function App() {
       </aside>
 
       <main>
+        <input
+          ref={backupFileInputRef}
+          className="backup-file-input"
+          type="file"
+          accept=".json,application/json"
+          onChange={importBackupFile}
+        />
+
         <header className="page-header">
           <div>
             <p>Bakery operations</p>
@@ -2381,6 +2602,74 @@ function App() {
               </form>
             </aside>
           </div>
+        )}
+
+        {activePage === "backup" && (
+          <section className="panel backup-panel">
+            <div className="panel-title">
+              <div>
+                <h2>Backup & Restore</h2>
+                <p>Move all bakery data between computers, phones, or browsers.</p>
+              </div>
+            </div>
+
+            <div className="backup-grid">
+              <article className="backup-card">
+                <div className="backup-card-icon">↓</div>
+                <div>
+                  <h3>Export all data</h3>
+                  <p>
+                    Download one JSON file containing employees,
+                    departments, tasks, shifts, vacations, and unavailability.
+                  </p>
+                </div>
+                <button type="button" className="primary" onClick={exportAllData}>
+                  Export backup
+                </button>
+              </article>
+
+              <article className="backup-card">
+                <div className="backup-card-icon">↻</div>
+                <div>
+                  <h3>Replace current data</h3>
+                  <p>
+                    Delete the current app data and restore the selected backup
+                    exactly as it was exported.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="danger-import-button"
+                  onClick={() => openImportFilePicker("replace")}
+                >
+                  Import and replace
+                </button>
+              </article>
+
+              <article className="backup-card">
+                <div className="backup-card-icon">＋</div>
+                <div>
+                  <h3>Merge with current data</h3>
+                  <p>
+                    Keep current data, add missing records, combine employee
+                    departments, and avoid duplicate shifts.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="secondary"
+                  onClick={() => openImportFilePicker("merge")}
+                >
+                  Import and merge
+                </button>
+              </article>
+            </div>
+
+            <div className="backup-note">
+              <strong>Recommended:</strong> Export a backup before replacing
+              data. Import only JSON files created by this shift planner.
+            </div>
+          </section>
         )}
 
         {activePage === "warnings" && (
