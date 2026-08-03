@@ -40,10 +40,6 @@ The project was designed around a real workplace need and includes tools for cre
 
 ![Backup and restore page](screenshots/backup-restore.png)
 
-### Backup and Restore
-
-![Backup and restore page](screenshots/backup-restore.png)
-
 ## Main Features
 
 - Weekly schedule from Monday to Sunday
