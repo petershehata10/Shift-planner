@@ -1,8 +1,8 @@
-# Bread Guy Shift Planner
+# Smart Shift Planner
 
 A responsive weekly shift-planning application built with React and Vite.
 
-The application was created to simplify employee scheduling for a bakery. It allows managers to organize employees, departments, tasks, working shifts, vacations, and unavailability in one place.
+The application was created to simplify weekly employee scheduling for small teams and businesses. It allows managers to organize employees, departments, tasks, working shifts, vacations, and unavailability in one place.
 
 ## Project Overview
 
