@@ -1,0 +1,159 @@
+/* ==========================================================================
+   Shift Planner Design Tokens (Harborlane Bakery)
+   Phase 3B: Design tokens and theme foundation
+   ========================================================================== */
+
+:root,
+[data-theme="light"] {
+  /* Brand & Core Palette (Approved Clean Light Direction) */
+  --color-canvas: #F8FAFB;
+  --color-surface: #FFFFFF;
+  --color-text: #20313D;
+  --color-text-secondary: #637583;
+  --color-text-muted: #8B9BA7;
+  --color-primary: #176C78;
+  --color-primary-hover: #12535E;
+  --color-primary-text: #FFFFFF;
+  --color-selected: #E5F2F3;
+  --color-accent: #D69A54;
+
+  /* Supporting Neutrals & Surfaces */
+  --color-border: #DEE6EA;
+  --color-border-subtle: #EBF1F4;
+  --color-surface-subtle: #F2F5F7;
+  --color-surface-hover: #EAF0F3;
+  --color-weekend-tint: #F4F7F9;
+
+  /* Feedback & Semantic States */
+  --color-warning: #D69A54;
+  --color-warning-surface: #FEF8ED;
+  --color-warning-border: #F3D4A3;
+  --color-warning-text: #784F1E;
+
+  --color-danger: #C0392B;
+  --color-danger-surface: #FDF2F2;
+  --color-danger-border: #F5C6CB;
+  --color-danger-text: #891B10;
+
+  --color-success: #2E7D32;
+  --color-success-surface: #E8F5E9;
+  --color-success-border: #C8E6C9;
+  --color-success-text: #1B5E20;
+
+  --color-focus-ring: rgba(23, 108, 120, 0.25);
+
+  /* Elevation & Shadows */
+  --shadow-card: 0 1px 3px rgba(32, 49, 61, 0.05);
+  --shadow-panel: 0 1px 3px rgba(32, 49, 61, 0.05), 0 10px 24px rgba(32, 49, 61, 0.04);
+  --shadow-toast: 0 4px 16px rgba(32, 49, 61, 0.12);
+
+  /* Typography */
+  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-display: 'Manrope', 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+[data-theme="dark"] {
+  /* Brand & Core Palette (Approved Dark Direction - Unchanged) */
+  --color-canvas: #151F27;
+  --color-surface: #23313C;
+  --color-text: #F0F5F4;
+  --color-primary: #5AB6B4;
+  --color-primary-hover: #71C5C3;
+  --color-primary-text: #151F27;
+  --color-selected: #334D52;
+  --color-accent: #E4AE6A;
+
+  /* Supporting Neutrals & Surfaces */
+  --color-text-secondary: #AFC3CA;
+  --color-text-muted: #728892;
+  --color-border: #364A55;
+  --color-border-subtle: #283842;
+  --color-surface-subtle: #1C2731;
+  --color-surface-hover: #2C3E4C;
+  --color-weekend-tint: #1A252E;
+
+  /* Feedback & Semantic States */
+  --color-warning: #E4AE6A;
+  --color-warning-surface: #2C261E;
+  --color-warning-border: #5A472E;
+  --color-warning-text: #F6D3A0;
+
+  --color-danger: #E74C3C;
+  --color-danger-surface: #342123;
+  --color-danger-border: #683033;
+  --color-danger-text: #F8B4B4;
+
+  --color-success: #4CAF50;
+  --color-success-surface: #1E2D24;
+  --color-success-border: #2D4F38;
+  --color-success-text: #A5D6A7;
+
+  --color-focus-ring: rgba(90, 182, 180, 0.35);
+
+  /* Elevation & Shadows */
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-panel: 0 4px 16px rgba(0, 0, 0, 0.35), 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-toast: 0 6px 20px rgba(0, 0, 0, 0.5);
+}
+
+/* System dark fallback when preference is system and OS prefers dark */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-canvas: #151F27;
+    --color-surface: #23313C;
+    --color-text: #F0F5F4;
+    --color-primary: #5AB6B4;
+    --color-primary-hover: #71C5C3;
+    --color-primary-text: #151F27;
+    --color-selected: #334D52;
+    --color-accent: #E4AE6A;
+
+    --color-text-secondary: #AFC3CA;
+    --color-text-muted: #728892;
+    --color-border: #364A55;
+    --color-border-subtle: #283842;
+    --color-surface-subtle: #1C2731;
+    --color-surface-hover: #2C3E4C;
+    --color-weekend-tint: #1A252E;
+
+    --color-warning: #E4AE6A;
+    --color-warning-surface: #2C261E;
+    --color-warning-border: #5A472E;
+    --color-warning-text: #F6D3A0;
+
+    --color-danger: #E74C3C;
+    --color-danger-surface: #342123;
+    --color-danger-border: #683033;
+    --color-danger-text: #F8B4B4;
+
+    --color-success: #4CAF50;
+    --color-success-surface: #1E2D24;
+    --color-success-border: #2D4F38;
+    --color-success-text: #A5D6A7;
+
+    --color-focus-ring: rgba(90, 182, 180, 0.35);
+
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3);
+    --shadow-panel: 0 4px 16px rgba(0, 0, 0, 0.35), 0 1px 2px rgba(0, 0, 0, 0.2);
+    --shadow-toast: 0 6px 20px rgba(0, 0, 0, 0.5);
+  }
+}
+
+/* Print/PDF safeguard: Always force high-contrast monochrome/light paper */
+@media print {
+  :root,
+  [data-theme="dark"],
+  [data-theme="light"] {
+    --color-canvas: #FFFFFF !important;
+    --color-surface: #FFFFFF !important;
+    --color-text: #111827 !important;
+    --color-text-secondary: #4B5563 !important;
+    --color-text-muted: #6B7280 !important;
+    --color-border: #D1D5DB !important;
+    --color-surface-subtle: #F3F4F6 !important;
+    --shadow-card: none !important;
+    --shadow-panel: none !important;
+    color: #111827 !important;
+    background: #FFFFFF !important;
+  }
+}

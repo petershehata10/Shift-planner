@@ -8,6 +8,8 @@ import {
 } from "./lib/scheduling.js";
 import { useSavedArray } from "./lib/useSavedArray.js";
 import { hasDuplicateEmployeeName } from "./lib/employees.js";
+import { useTheme } from "./lib/useTheme.js";
+import { getAvatarColor, getAvatarInitials } from "./lib/avatars.js";
 
 const DEFAULT_DEPARTMENTS = [
   {
@@ -177,6 +179,8 @@ function getContrastText(hexColor) {
 }
 
 function App() {
+  const { themePreference, setTheme } = useTheme();
+
   const [employees, setEmployees, employeesBlocked, employeesWriteFailed] = useSavedArray(
     "shiftPlannerEmployees", [],
   );
@@ -842,7 +846,7 @@ function App() {
 
   function exportAllData() {
     const backup = {
-      app: "Bread Guy Shift Planner",
+      app: "Harborlane Shift Planner",
       version: 1,
       exportedAt: new Date().toISOString(),
       data: { employees, shifts, departments },
@@ -856,7 +860,7 @@ function App() {
     const link = document.createElement("a");
 
     link.href = downloadUrl;
-    link.download = `bread-guy-shift-backup-${fileDate}.json`;
+    link.download = `harborlane-shift-backup-${fileDate}.json`;
     document.body.appendChild(link);
     link.click();
     link.remove();
@@ -882,7 +886,7 @@ function App() {
       !Array.isArray(importedData.shifts) ||
       !Array.isArray(importedData.departments)
     ) {
-      throw new Error("This is not a valid Bread Guy backup file.");
+      throw new Error("This is not a valid Shift Planner backup file.");
     }
 
     return {
@@ -1065,18 +1069,25 @@ function App() {
       <aside className="sidebar">
         <div className="brand">
           <div className="logo">
-            <img src="/breadguylogo.png" alt="Bread Guy logo" />
+            <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <rect width="36" height="36" rx="10" fill="#176C78"/>
+              <path d="M8 22 Q12 10 18 14 Q22 18 28 10" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+              <path d="M8 27 Q14 20 20 23 Q24 26 28 18" stroke="#9EDCDA" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+              <circle cx="18" cy="14" r="2.5" fill="#D69A54"/>
+            </svg>
           </div>
 
           <div>
-            <strong>Bread Guy</strong>
-            <span>Shift Planner</span>
+            <strong>Harborlane</strong>
+            <span>Artisan Bakery</span>
+            <span>Fictional demo organization</span>
           </div>
         </div>
 
         <nav>
           <button
             className={activePage === "schedule" ? "active" : ""}
+            aria-current={activePage === "schedule" ? "page" : undefined}
             onClick={() => setActivePage("schedule")}
           >
             Weekly Schedule
@@ -1084,6 +1095,7 @@ function App() {
 
           <button
             className={activePage === "employees" ? "active" : ""}
+            aria-current={activePage === "employees" ? "page" : undefined}
             onClick={() => setActivePage("employees")}
           >
             Employees
@@ -1091,6 +1103,7 @@ function App() {
 
           <button
             className={activePage === "departments" ? "active" : ""}
+            aria-current={activePage === "departments" ? "page" : undefined}
             onClick={() => setActivePage("departments")}
           >
             Departments & Tasks
@@ -1098,6 +1111,7 @@ function App() {
 
           <button
             className={activePage === "backup" ? "active" : ""}
+            aria-current={activePage === "backup" ? "page" : undefined}
             onClick={() => setActivePage("backup")}
           >
             Backup & Restore
@@ -1105,6 +1119,7 @@ function App() {
 
           <button
             className={activePage === "warnings" ? "active" : ""}
+            aria-current={activePage === "warnings" ? "page" : undefined}
             onClick={() => setActivePage("warnings")}
           >
             Warnings {warnings.length > 0 && `(${warnings.length})`}
@@ -1141,10 +1156,40 @@ function App() {
         <header className="page-header">
           <div>
             <p>Bakery operations</p>
-            <h1>Smart Shift Planner</h1>
+            <h1>Shift Planner</h1>
             <span>
               Build and manage a separate schedule for every week.
             </span>
+          </div>
+
+          <div className="theme-toggle-group" role="group" aria-label="Theme selection">
+            <button
+              type="button"
+              className={`theme-toggle-btn ${themePreference === "light" ? "active" : ""}`}
+              onClick={() => setTheme("light")}
+              aria-pressed={themePreference === "light"}
+              title="Switch to Light theme"
+            >
+              Light
+            </button>
+            <button
+              type="button"
+              className={`theme-toggle-btn ${themePreference === "dark" ? "active" : ""}`}
+              onClick={() => setTheme("dark")}
+              aria-pressed={themePreference === "dark"}
+              title="Switch to Dark theme"
+            >
+              Dark
+            </button>
+            <button
+              type="button"
+              className={`theme-toggle-btn ${themePreference === "system" ? "active" : ""}`}
+              onClick={() => setTheme("system")}
+              aria-pressed={themePreference === "system"}
+              title="Follow system preference"
+            >
+              System
+            </button>
           </div>
         </header>
 
@@ -1272,7 +1317,7 @@ function App() {
               </div>
 
               <div className="print-header">
-                <h1>Bakery Weekly Schedule</h1>
+                <h1>Harborlane Artisan Bakery – Weekly Schedule</h1>
                 <p>{formatWeekRange(selectedWeekStart)}</p>
               </div>
 
@@ -1296,8 +1341,8 @@ function App() {
                     {employees.map((employee) => (
                       <Fragment key={employee.id}>
                         <div className="grid-employee">
-                          <div className="avatar">
-                            {employee.name[0].toUpperCase()}
+                          <div className="avatar" aria-hidden="true" style={{ background: getAvatarColor(employee.name).bg, color: getAvatarColor(employee.name).text }}>
+                            {getAvatarInitials(employee.name)}
                           </div>
                           <div>
                             <strong>{employee.name}</strong>
@@ -1492,8 +1537,8 @@ function App() {
                                   key={employee.id}
                                 >
                                   <div className="list-employee-header">
-                                    <div className="avatar">
-                                      {employee.name[0].toUpperCase()}
+                                    <div className="avatar" aria-hidden="true" style={{ background: getAvatarColor(employee.name).bg, color: getAvatarColor(employee.name).text }}>
+                                      {getAvatarInitials(employee.name)}
                                     </div>
 
                                     <div>
@@ -1538,10 +1583,6 @@ function App() {
                                         <div
                                           className="list-entry-card"
                                           key={entry.id}
-                                          style={{
-                                            borderLeftColor:
-                                              entryColor,
-                                          }}
                                         >
                                           <div className="list-entry-time">
                                             <strong>
@@ -1750,6 +1791,7 @@ function App() {
                 </div>
               ) : (
                 <form className="form" onSubmit={addShift}>
+                  <div className="shift-form-body">
                   <label>
                     Entry type
                     <select
@@ -2069,6 +2111,8 @@ function App() {
                     </label>
                   )}
 
+                  </div>
+
                   <div className="form-actions">
                     <button className="primary" type="submit">
                       {editingShiftId
@@ -2118,8 +2162,8 @@ function App() {
                       className="employee"
                       key={employee.id}
                     >
-                      <div className="avatar">
-                        {employee.name[0].toUpperCase()}
+                      <div className="avatar" aria-hidden="true" style={{ background: getAvatarColor(employee.name).bg, color: getAvatarColor(employee.name).text }}>
+                        {getAvatarInitials(employee.name)}
                       </div>
 
                       <div className="employee-info">
@@ -2554,7 +2598,7 @@ function App() {
 
             <div className="print-preview-page">
               <div className="preview-title">
-                <h1>Bakery Weekly Schedule</h1>
+                <h1>Harborlane Artisan Bakery – Weekly Schedule</h1>
                 <p>{formatWeekRange(selectedWeekStart)}</p>
               </div>
 
