@@ -182,6 +182,7 @@ function getContrastText(hexColor) {
 
 function App() {
   const { themePreference, setTheme } = useTheme();
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const [employees, setEmployees, employeesBlocked, employeesWriteFailed] = useSavedArray(
     "shiftPlannerEmployees", [],
@@ -1065,10 +1066,25 @@ function App() {
   }
 
   return (
-    <div className="app">
+    <div className={`app${sidebarCollapsed ? " sidebar-collapsed" : ""}`}>
       {message && <div className="toast">{message}</div>}
 
       <aside className="sidebar">
+        <button
+          type="button"
+          className="sidebar-toggle"
+          onClick={() => setSidebarCollapsed((collapsed) => !collapsed)}
+          aria-expanded={!sidebarCollapsed}
+          aria-controls="workspace-navigation"
+          aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <rect x="3" y="4" width="18" height="16" rx="2" />
+            <path d="M9 4v16" />
+            <path d={sidebarCollapsed ? "m13 9 3 3-3 3" : "m16 9-3 3 3 3"} />
+          </svg>
+        </button>
         <div className="brand">
           <div className="logo">
             <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -1086,54 +1102,70 @@ function App() {
           </div>
         </div>
 
-        <nav>
+        <nav id="workspace-navigation" aria-label="Workspace">
           <button
             className={activePage === "schedule" ? "active" : ""}
+            aria-label="Weekly Schedule"
+            title="Weekly Schedule"
             aria-current={activePage === "schedule" ? "page" : undefined}
             onClick={() => setActivePage("schedule")}
           >
-            Weekly Schedule
+            <svg className="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 6h16v14H4z M8 3v6 M16 3v6 M4 11h16" /></svg>
+            <span className="nav-label">Weekly Schedule</span>
           </button>
 
           <button
             className={activePage === "employees" ? "active" : ""}
+            aria-label="Employees"
+            title="Employees"
             aria-current={activePage === "employees" ? "page" : undefined}
             onClick={() => setActivePage("employees")}
           >
-            Employees
+            <svg className="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M20 21v-2a4 4 0 0 0-3-3.87 M9 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8 M17 3a4 4 0 0 1 0 8" /></svg>
+            <span className="nav-label">Employees</span>
           </button>
 
           <button
             className={activePage === "departments" ? "active" : ""}
+            aria-label="Departments & Tasks"
+            title="Departments & Tasks"
             aria-current={activePage === "departments" ? "page" : undefined}
             onClick={() => setActivePage("departments")}
           >
-            Departments & Tasks
+            <svg className="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z" /></svg>
+            <span className="nav-label">Departments & Tasks</span>
           </button>
 
           <button
             className={activePage === "backup" ? "active" : ""}
+            aria-label="Backup & Restore"
+            title="Backup & Restore"
             aria-current={activePage === "backup" ? "page" : undefined}
             onClick={() => setActivePage("backup")}
           >
-            Backup & Restore
+            <svg className="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 16v5h16v-5 M12 3v13 M7 8l5-5 5 5" /></svg>
+            <span className="nav-label">Backup & Restore</span>
           </button>
 
           <button
             className={activePage === "warnings" ? "active" : ""}
+            aria-label="Warnings"
+            title="Warnings"
             aria-current={activePage === "warnings" ? "page" : undefined}
             onClick={() => setActivePage("warnings")}
           >
-            Warnings {warnings.length > 0 && `(${warnings.length})`}
+            <svg className="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3 2 21h20L12 3z M12 9v5 M12 17h.01" /></svg>
+            <span className="nav-label">Warnings {warnings.length > 0 && `(${warnings.length})`}</span>
           </button>
         </nav>
 
-        <button className="clear-button" onClick={clearAllData}>
-          Clear employees & shifts
+        <button className="clear-button" onClick={clearAllData} aria-label="Clear employees and shifts" title="Clear employees and shifts">
+          <svg className="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 6h18 M9 6V3h6v3 M5 6l1 15h12l1-15 M10 10v7 M14 10v7" /></svg>
+          <span className="nav-label">Clear employees &amp; shifts</span>
         </button>
       </aside>
 
-      <main>
+      <main data-page={activePage}>
         {blockedStorage && (
           <div className="notice" role="alert">
             Some local data could not be loaded ({blockedStorage}). Existing stored

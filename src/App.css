@@ -964,20 +964,18 @@ fieldset {
 
 @keyframes formPulse {
   0% {
-    border-color: #e2dcd5;
-    box-shadow: 0 12px 36px rgb(54 43 33 / 5%);
+    border-color: var(--color-border);
+    box-shadow: var(--shadow-panel);
   }
 
   25% {
-    border-color: #a66c3b;
-    box-shadow:
-      0 0 0 5px rgb(166 108 59 / 14%),
-      0 18px 45px rgb(80 49 24 / 12%);
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 4px var(--color-focus-ring);
   }
 
   100% {
-    border-color: #e2dcd5;
-    box-shadow: 0 12px 36px rgb(54 43 33 / 5%);
+    border-color: var(--color-border);
+    box-shadow: var(--shadow-panel);
   }
 }
 
@@ -1835,17 +1833,39 @@ fieldset {
 }
 
 .department-color-control input[type="color"] {
-  width: 46px;
-  height: 34px;
-  border: 1px solid #d8d0c8;
-  border-radius: 8px;
-  padding: 3px;
-  background: white;
+  width: 36px;
+  height: 28px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 2px;
+  background: var(--color-surface);
+  cursor: pointer;
+}
+
+.department-color-control input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.department-color-control input[type="color"]::-webkit-color-swatch {
+  border: 0;
+  border-radius: 3px;
+}
+
+.department-color-control input[type="color"]::-moz-color-swatch {
+  border: 0;
+  border-radius: 3px;
+}
+
+.department-color-control input[type="color"]:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
 }
 
 .department-color-control code {
-  color: #776e66;
-  font-size: 10px;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
 }
 
 /* Larger, clearer weekly grid text */
@@ -2731,5 +2751,264 @@ fieldset {
   .shift-form-panel .primary:focus-visible {
     outline: 2px solid var(--color-primary);
     outline-offset: 3px;
+  }
+}
+/* Workspace rail is desktop-only; mobile retains the existing navigation. */
+.sidebar-toggle,
+.nav-icon {
+  display: none;
+}
+
+@media screen and (min-width: 1001px) {
+  .sidebar-toggle {
+    display: grid;
+    place-items: center;
+    align-self: flex-end;
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    margin-bottom: 8px;
+    padding: 0;
+    border: 1px solid rgb(255 255 255 / 15%);
+    border-radius: 7px;
+    background: transparent;
+    color: #AFC3CA;
+  }
+
+  .sidebar-toggle:hover {
+    background: #284550;
+    color: #E8F0F2;
+  }
+
+  .app.sidebar-collapsed {
+    grid-template-columns: 72px minmax(0, 1fr);
+  }
+
+  .sidebar-collapsed .sidebar {
+    padding-inline: 10px;
+  }
+
+  .sidebar-collapsed .sidebar-toggle {
+    align-self: center;
+  }
+
+  .sidebar-collapsed .brand {
+    justify-content: center;
+    padding-inline: 0;
+  }
+
+  .sidebar-collapsed .brand > div:last-child,
+  .sidebar-collapsed .nav-label {
+    display: none;
+  }
+
+  .sidebar-collapsed .sidebar nav button,
+  .sidebar-collapsed .clear-button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 44px;
+    padding: 10px;
+  }
+
+  .sidebar-collapsed .nav-icon {
+    display: block;
+    flex-shrink: 0;
+  }
+}
+
+/* Typography only: retain the existing A4 table geometry and color styles. */
+.print-preview-page {
+  font-family: var(--font-sans);
+}
+
+.print-preview-page .preview-title h1 {
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+
+.print-preview-page .preview-title p {
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.print-preview-page .preview-day strong,
+.print-preview-page .preview-corner {
+  font-weight: 600;
+}
+
+.print-preview-page .preview-day span {
+  font-size: 8pt;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.print-preview-page .preview-employee strong {
+  font-size: 8.5pt;
+  font-weight: 600;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.print-preview-page .preview-shift strong {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+  line-height: 1.3;
+}
+
+.print-preview-page .preview-shift > span {
+  font-weight: 600;
+}
+
+.print-preview-page .preview-task-text {
+  font-weight: 400;
+}
+/* Workspace alignment uses available content width, including sidebar collapse. */
+@media screen {
+  main[data-page] {
+    min-width: 0;
+    container: workspace / inline-size;
+    padding: clamp(16px, 2.5vw, 32px);
+  }
+
+  main[data-page]:not([data-page="schedule"]) {
+    width: min(1280px, 100%);
+    margin-inline: auto;
+  }
+
+  main[data-page] > .two-panel-layout,
+  main[data-page] > .departments-layout {
+    align-items: start;
+    gap: 20px;
+  }
+
+  main[data-page="employees"] > .two-panel-layout,
+  main[data-page="departments"] > .departments-layout,
+  main[data-page="schedule"] > .two-panel-layout:not(.grid-view-layout) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  main[data-page] .panel {
+    min-width: 0;
+  }
+
+  main[data-page="employees"] .sticky-panel,
+  main[data-page="departments"] .add-department {
+    position: static;
+    width: 100%;
+    max-width: 420px;
+  }
+
+  main[data-page="schedule"] .shift-form-panel {
+    max-width: 640px;
+    justify-self: start;
+  }
+
+  main[data-page="backup"] > .backup-panel {
+    width: 100%;
+    max-width: 1100px;
+  }
+
+  main[data-page="warnings"] > .panel {
+    width: 100%;
+    max-width: 960px;
+  }
+
+  main[data-page] :is(.panel-title, .department-card-title) {
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  main[data-page] :is(.employee-info, .department-card-title h3, .warnings-list article span) {
+    overflow-wrap: anywhere;
+  }
+
+  main[data-page] .inline-form {
+    flex-wrap: wrap;
+  }
+
+  main[data-page] .form-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  main[data-page] .shift-form-week-controls {
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+  }
+
+  main[data-page] :is(.week-navigation, .shift-form-week-controls) button {
+    background: var(--color-surface);
+    color: var(--color-text);
+    border-color: var(--color-border);
+    font-weight: 600;
+  }
+
+  main[data-page] :is(.week-navigation, .shift-form-week-controls) button:hover {
+    background: var(--color-surface-hover);
+    border-color: var(--color-primary);
+  }
+
+  main[data-page] :is(.week-navigation, .shift-form-week-controls) button:active {
+    background: var(--color-selected);
+    border-color: var(--color-primary);
+  }
+
+  main[data-page] button:focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  main[data-page] :is(button, input, select):focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  main[data-page] :is(.week-navigation, .shift-form-week-controls) button:focus-visible {
+    border-color: var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  @container workspace (min-width: 880px) {
+    main[data-page="employees"] > .two-panel-layout,
+    main[data-page="departments"] > .departments-layout,
+    main[data-page="schedule"] > .two-panel-layout:not(.grid-view-layout) {
+      grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
+    }
+
+    main[data-page="employees"] .sticky-panel,
+    main[data-page="departments"] .add-department {
+      max-width: none;
+    }
+  }
+
+  @container workspace (max-width: 900px) {
+    main[data-page="backup"] .backup-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    main[data-page="backup"] .backup-card {
+      min-height: auto;
+    }
+  }
+
+  @media (max-width: 430px) {
+    main[data-page] .shift-form-week-controls {
+      grid-template-columns: auto minmax(0, 1fr) auto;
+    }
+
+    main[data-page="employees"] .employee {
+      flex-wrap: wrap;
+    }
+
+    main[data-page="employees"] .employee-info {
+      flex-basis: calc(100% - 56px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .form-highlight {
+      animation: none;
+      border-color: var(--color-primary);
+    }
   }
 }
