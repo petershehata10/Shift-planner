@@ -1,5 +1,6 @@
-import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useMemo, useRef, useState } from "react";
 import "./App.css";
+import { useSavedArray } from "./lib/useSavedArray.js";
 
 const DAYS = [
   "Monday",
@@ -81,15 +82,6 @@ const EMPTY_SHIFT_FORM = {
   departmentId: "baking",
   taskAssignments: [],
 };
-
-function loadSaved(key, fallback) {
-  try {
-    const value = localStorage.getItem(key);
-    return value ? JSON.parse(value) : fallback;
-  } catch {
-    return fallback;
-  }
-}
 
 function toLocalISODate(date) {
   const year = date.getFullYear();
@@ -322,18 +314,16 @@ function shiftsOverlap(first, second) {
 }
 
 function App() {
-  const [employees, setEmployees] = useState(() =>
-    loadSaved("shiftPlannerEmployees", []),
+  const [employees, setEmployees, employeesBlocked, employeesWriteFailed] = useSavedArray(
+    "shiftPlannerEmployees", [],
   );
 
-  const [shifts, setShifts] = useState(() =>
-    loadSaved("shiftPlannerShifts", []).map(normalizeShift),
+  const [shifts, setShifts, shiftsBlocked, shiftsWriteFailed] = useSavedArray(
+    "shiftPlannerShifts", [], (value) => value.map(normalizeShift),
   );
 
-  const [departments, setDepartments] = useState(() =>
-    normalizeDepartments(
-      loadSaved("shiftPlannerDepartments", DEFAULT_DEPARTMENTS),
-    ),
+  const [departments, setDepartments, departmentsBlocked, departmentsWriteFailed] = useSavedArray(
+    "shiftPlannerDepartments", DEFAULT_DEPARTMENTS, normalizeDepartments,
   );
 
   const [employeeForm, setEmployeeForm] = useState(EMPTY_EMPLOYEE_FORM);
@@ -365,23 +355,16 @@ function App() {
   const backupFileInputRef = useRef(null);
   const pendingImportModeRef = useRef("replace");
 
-  useEffect(() => {
-    localStorage.setItem(
-      "shiftPlannerEmployees",
-      JSON.stringify(employees),
-    );
-  }, [employees]);
-
-  useEffect(() => {
-    localStorage.setItem("shiftPlannerShifts", JSON.stringify(shifts));
-  }, [shifts]);
-
-  useEffect(() => {
-    localStorage.setItem(
-      "shiftPlannerDepartments",
-      JSON.stringify(departments),
-    );
-  }, [departments]);
+  const blockedStorage = [
+    employeesBlocked && "employees",
+    shiftsBlocked && "shifts",
+    departmentsBlocked && "departments",
+  ].filter(Boolean).join(", ");
+  const failedStorage = [
+    employeesWriteFailed && "employees",
+    shiftsWriteFailed && "shifts",
+    departmentsWriteFailed && "departments",
+  ].filter(Boolean).join(", ");
 
   const selectedDepartment = departments.find(
     (department) => department.id === shiftForm.departmentId,
@@ -1306,6 +1289,19 @@ function App() {
       </aside>
 
       <main>
+        {blockedStorage && (
+          <div className="notice" role="alert">
+            Some local data could not be loaded ({blockedStorage}). Existing stored
+            data has not been replaced. Changes to these records will not be saved
+            in this session. Keep any original backups before closing or reloading.
+          </div>
+        )}
+        {failedStorage && (
+          <div className="notice" role="alert">
+            Changes could not be saved locally ({failedStorage}). Export a backup
+            before closing or reloading to keep your current changes.
+          </div>
+        )}
         <input
           ref={backupFileInputRef}
           className="backup-file-input"
