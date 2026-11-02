@@ -1,6 +1,7 @@
 import { Fragment, useMemo, useRef, useState } from "react";
 import "./App.css";
 import { useSavedArray } from "./lib/useSavedArray.js";
+import { hasDuplicateEmployeeName } from "./lib/employees.js";
 
 const DAYS = [
   "Monday",
@@ -532,6 +533,11 @@ function App() {
 
     if (!employeeForm.name.trim()) {
       showMessage("Enter the employee name.");
+      return;
+    }
+
+    if (hasDuplicateEmployeeName(employees, employeeForm.name, editingEmployeeId)) {
+      showMessage("An employee with this name already exists.");
       return;
     }
 
