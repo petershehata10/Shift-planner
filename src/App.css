@@ -2481,6 +2481,159 @@ fieldset {
   .backup-card { min-height: auto; }
 }
 
+/* Page headers and shared typography; paper typography stays unchanged. */
+@media screen {
+  main > .page-header {
+    justify-content: flex-end;
+    margin-bottom: 16px;
+  }
+
+  main .panel-title h1 {
+    margin: 0 0 6px;
+    font-family: var(--font-display);
+    font-size: 24px;
+    line-height: 1.3;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--color-text);
+  }
+
+  main .panel-title h2 {
+    font-size: 20px;
+    line-height: 1.35;
+    font-weight: 700;
+  }
+
+  main .department-card h3,
+  main .backup-card h3 {
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  main .form label,
+  main .form legend,
+  main .department-color-control {
+    font-size: 14px;
+    line-height: 1.5;
+    font-weight: 600;
+  }
+
+  main .form input,
+  main .form select,
+  main .inline-form input,
+  main .edit-inline input {
+    font-family: var(--font-sans);
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.5;
+  }
+
+  main .form button,
+  main .inline-form button,
+  main .edit-inline button,
+  main .backup-card button {
+    font-size: 14px;
+    line-height: 1.4;
+    font-weight: 600;
+  }
+
+  main .panel-title p,
+  main .auto-time-note,
+  main .empty,
+  main .notice,
+  main .vacation-notice,
+  main .backup-card p,
+  main .backup-note,
+  main .big-empty p,
+  main .employee-info > span,
+  main .task-management-list > p,
+  main .selected-task-summary > strong,
+  main .duration-preview span {
+    font-size: 13px;
+    line-height: 1.5;
+    font-weight: 500;
+  }
+
+  main .task-management-list > div {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  main .shift-form-panel .primary {
+    font-weight: 700;
+  }
+
+  /* Light list palette; inherit the existing dark palette unchanged. */
+  :root:not([data-theme="dark"]) .printable-schedule {
+    --list-row: #F5F7F8;
+    --list-detail: #FFFFFF;
+    --list-border: #DEE6EA;
+    --list-text: #20313D;
+    --list-secondary: #637583;
+    --list-task: #F2F4F6;
+  }
+
+  :root:not([data-theme="dark"]) .printable-schedule .list-employee-group {
+    background: var(--list-row);
+    border-color: var(--list-border);
+  }
+
+  :root:not([data-theme="dark"]) .printable-schedule .list-entry-card {
+    background: var(--list-detail);
+    border-color: var(--list-border);
+    color: var(--list-text);
+  }
+
+  :root:not([data-theme="dark"]) .printable-schedule .list-employee-header strong,
+  :root:not([data-theme="dark"]) .printable-schedule .list-entry-time strong,
+  :root:not([data-theme="dark"]) .printable-schedule .list-shift-tasks span b {
+    color: var(--list-text);
+  }
+
+  :root:not([data-theme="dark"]) .printable-schedule .list-employee-header span,
+  :root:not([data-theme="dark"]) .printable-schedule .list-entry-time span,
+  :root:not([data-theme="dark"]) .printable-schedule .list-status-note {
+    color: var(--list-secondary);
+  }
+
+  :root:not([data-theme="dark"]) .printable-schedule .list-shift-tasks span {
+    background: var(--list-task);
+    color: var(--list-secondary);
+  }
+
+  :root[data-theme="light"] .printable-schedule .row-actions button {
+    background: #F2F4F6;
+    color: #20313D;
+    border: 1px solid #DEE6EA;
+  }
+
+  :root[data-theme="light"] .printable-schedule .row-actions button:hover {
+    background: #EAF0F3;
+    border-color: var(--color-primary);
+  }
+
+  :root[data-theme="light"] .printable-schedule .row-actions .delete:hover {
+    color: var(--color-danger-text);
+  }
+
+  :root[data-theme="light"] .printable-schedule .row-actions button:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme]) .printable-schedule {
+      --list-row: var(--color-surface-subtle);
+      --list-detail: var(--color-surface);
+      --list-border: var(--color-border);
+      --list-text: var(--color-text);
+      --list-secondary: var(--color-text-secondary);
+      --list-task: var(--color-surface-subtle);
+    }
+  }
+}
+
 /* Screen-only contrast polish; keep the existing paper styles intact. */
 @media screen {
   :root {

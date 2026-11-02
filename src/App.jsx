@@ -1082,7 +1082,7 @@ function App() {
           <div>
             <strong>Harborlane</strong>
             <span>Artisan Bakery</span>
-            <span>Fictional demo organization</span>
+            <span>Demo workspace</span>
           </div>
         </div>
 
@@ -1156,14 +1156,6 @@ function App() {
         />
 
         <header className="page-header">
-          <div>
-            <p>Bakery operations</p>
-            <h1>Shift Planner</h1>
-            <span>
-              Build and manage a separate schedule for every week.
-            </span>
-          </div>
-
           <div className="theme-toggle-group" role="group" aria-label="Theme selection">
             <button
               type="button"
@@ -1195,25 +1187,6 @@ function App() {
           </div>
         </header>
 
-        <section className="summary">
-          <article>
-            <span>Employees</span>
-            <strong>{employees.length}</strong>
-          </article>
-          <article>
-            <span>Shifts</span>
-            <strong>{visibleWeekShifts.length}</strong>
-          </article>
-          <article>
-            <span>Departments</span>
-            <strong>{departments.length}</strong>
-          </article>
-          <article className={warnings.length ? "warning" : ""}>
-            <span>Warnings</span>
-            <strong>{warnings.length}</strong>
-          </article>
-        </section>
-
         {activePage === "schedule" && (
           <div
             className={`two-panel-layout ${scheduleView === "grid" ? "grid-view-layout" : ""
@@ -1222,9 +1195,9 @@ function App() {
             <section className="panel printable-schedule">
               <div className="panel-title week-panel-title">
                 <div>
-                  <h2>{formatWeekRange(selectedWeekStart)}</h2>
+                  <h1>Weekly schedule</h1>
                   <p>
-                    Monday to Sunday weekly schedule.
+                    {formatWeekRange(selectedWeekStart)}
                     {selectedWeekStart ===
                       toLocalISODate(getMonday()) && (
                         <span className="current-week-label">
@@ -2136,8 +2109,8 @@ function App() {
             <section className="panel">
               <div className="panel-title">
                 <div>
-                  <h2>Employees</h2>
-                  <p>The list starts empty.</p>
+                  <h1>Employees</h1>
+                  <p>{employees.length} {employees.length === 1 ? "employee" : "employees"}</p>
                 </div>
               </div>
 
@@ -2275,7 +2248,7 @@ function App() {
             <section className="panel">
               <div className="panel-title">
                 <div>
-                  <h2>Departments & Tasks</h2>
+                  <h1>Departments &amp; tasks</h1>
                   <p>Add departments and tasks at any time.</p>
                 </div>
               </div>
@@ -2468,7 +2441,7 @@ function App() {
           <section className="panel backup-panel">
             <div className="panel-title">
               <div>
-                <h2>Backup & Restore</h2>
+                <h1>Backup &amp; restore</h1>
                 <p>Move all bakery data between computers, phones, or browsers.</p>
               </div>
             </div>
@@ -2536,8 +2509,8 @@ function App() {
           <section className="panel">
             <div className="panel-title">
               <div>
-                <h2>Warnings</h2>
-                <p>Review conflicts before using the schedule.</p>
+                <h1>Schedule warnings</h1>
+                <p>{warnings.length} {warnings.length === 1 ? "warning" : "warnings"} ? {formatWeekRange(selectedWeekStart)}</p>
               </div>
             </div>
 
