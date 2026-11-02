@@ -1306,6 +1306,32 @@ fieldset {
   gap: 10px;
 }
 
+@media screen {
+  .schedule-toolbar > .primary {
+    height: 40px;
+    max-width: 100%;
+    padding: 0 12px;
+    align-self: center;
+    flex: 0 0 auto;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.4;
+    white-space: nowrap;
+  }
+
+  .schedule-toolbar > .primary:disabled {
+    background: var(--color-primary);
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  @media (max-width: 1100px) {
+    .schedule-toolbar > .primary {
+      align-self: flex-start;
+    }
+  }
+}
+
 .view-switcher {
   display: flex;
   border: 1px solid var(--color-border);
@@ -2873,8 +2899,17 @@ fieldset {
     padding: clamp(16px, 2.5vw, 32px);
   }
 
-  main[data-page]:not([data-page="schedule"]) {
-    width: min(1280px, 100%);
+  main[data-page] {
+    width: 100%;
+  }
+
+  main[data-page] > .workspace-toolbar {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  main[data-page]:not([data-page="schedule"]) > :is(.two-panel-layout, .departments-layout) {
+    max-width: 1216px;
     margin-inline: auto;
   }
 
@@ -2885,8 +2920,7 @@ fieldset {
   }
 
   main[data-page="employees"] > .two-panel-layout,
-  main[data-page="departments"] > .departments-layout,
-  main[data-page="schedule"] > .two-panel-layout:not(.grid-view-layout) {
+  main[data-page="departments"] > .departments-layout {
     grid-template-columns: minmax(0, 1fr);
   }
 
@@ -2901,19 +2935,16 @@ fieldset {
     max-width: 420px;
   }
 
-  main[data-page="schedule"] .shift-form-panel {
-    max-width: 640px;
-    justify-self: start;
-  }
-
   main[data-page="backup"] > .backup-panel {
     width: 100%;
     max-width: 1100px;
+    margin-inline: auto;
   }
 
   main[data-page="warnings"] > .panel {
     width: 100%;
     max-width: 960px;
+    margin-inline: auto;
   }
 
   main[data-page] :is(.panel-title, .department-card-title) {
@@ -2970,8 +3001,7 @@ fieldset {
 
   @container workspace (min-width: 880px) {
     main[data-page="employees"] > .two-panel-layout,
-    main[data-page="departments"] > .departments-layout,
-    main[data-page="schedule"] > .two-panel-layout:not(.grid-view-layout) {
+    main[data-page="departments"] > .departments-layout {
       grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
     }
 

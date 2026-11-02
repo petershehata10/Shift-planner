@@ -1,6 +1,8 @@
-import { Fragment, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import "./App.css";
 import "./styles/schedule.css";
+import "./styles/shiftEditor.css";
+import { createShiftEditorForm, editorSnapshot, hasUnsavedEditorChanges } from "./lib/shiftEditor.js";
 import {
   DAYS, toLocalISODate, getMonday, addDays, parseLocalDate,
   formatWeekRange, formatDayDate, snapTimeToQuarterHour,
@@ -216,7 +218,12 @@ function App() {
   const [editingTaskName, setEditingTaskName] = useState("");
   const [editingShiftId, setEditingShiftId] = useState(null);
   const [taskDepartmentId, setTaskDepartmentId] = useState("baking");
-  const [highlightShiftForm, setHighlightShiftForm] = useState(false);
+  const [shiftEditorOpen, setShiftEditorOpen] = useState(false);
+  const [shiftEditorMessage, setShiftEditorMessage] = useState("");
+  const shiftEditorBaseline = useRef(null);
+  const shiftEditorTrigger = useRef(null);
+  const shiftEditorCloseRef = useRef(null);
+  const addEntryButtonRef = useRef(null);
   const shiftFormRef = useRef(null);
   const [highlightEmployeeForm, setHighlightEmployeeForm] = useState(false);
   const employeeFormRef = useRef(null);
@@ -224,6 +231,53 @@ function App() {
   const shiftCalendarInputRef = useRef(null);
   const backupFileInputRef = useRef(null);
   const pendingImportModeRef = useRef("replace");
+
+  useEffect(() => {
+    if (!shiftEditorOpen) return;
+    const dialog = shiftFormRef.current;
+    const trigger = shiftEditorTrigger.current;
+    const fallbackTrigger = addEntryButtonRef.current;
+    const previousOverflow = document.body.style.overflow;
+    dialog.showModal();
+    document.body.style.overflow = "hidden";
+    shiftEditorCloseRef.current?.focus();
+    return () => {
+      dialog.close();
+      document.body.style.overflow = previousOverflow;
+      if (trigger?.isConnected) trigger.focus();
+      else fallbackTrigger?.focus();
+    };
+  }, [shiftEditorOpen]);
+
+  useEffect(() => {
+    if (shiftEditorOpen && shiftEditorBaseline.current === null) {
+      shiftEditorBaseline.current = editorSnapshot(shiftForm, selectedWeekStart);
+    }
+  }, [shiftEditorOpen, shiftForm, selectedWeekStart]);
+
+  function canDiscardShiftChanges() {
+    return !shiftEditorOpen
+      || !hasUnsavedEditorChanges(shiftEditorBaseline.current, shiftForm, selectedWeekStart)
+      || window.confirm("Discard unsaved schedule entry changes?");
+  }
+
+  function closeShiftEditor() {
+    if (!canDiscardShiftChanges()) return;
+    setShiftEditorOpen(false);
+    setShiftEditorMessage("");
+    cancelEditingShift();
+  }
+
+  function openShiftEditor(form, weekStart, editingId = null) {
+    shiftEditorTrigger.current = document.activeElement;
+    shiftEditorBaseline.current = editorSnapshot(form, weekStart);
+    setSelectedWeekStart(weekStart);
+    setEditingShiftId(editingId);
+    setShiftForm(form);
+    setTaskDepartmentId(form.departmentId);
+    setShiftEditorMessage("");
+    setShiftEditorOpen(true);
+  }
 
   const blockedStorage = [
     employeesBlocked && "employees",
@@ -258,6 +312,7 @@ function App() {
   );
 
   function changeWeek(numberOfWeeks) {
+    if (!canDiscardShiftChanges()) return;
     const currentMonday = parseLocalDate(selectedWeekStart);
     const nextMonday = addDays(currentMonday, numberOfWeeks * 7);
     setSelectedWeekStart(toLocalISODate(nextMonday));
@@ -265,6 +320,7 @@ function App() {
   }
 
   function goToCurrentWeek() {
+    if (!canDiscardShiftChanges()) return;
     setSelectedWeekStart(toLocalISODate(getMonday()));
     cancelEditingShift();
   }
@@ -300,7 +356,7 @@ function App() {
   function selectDateWeek(event) {
     const selectedDate = event.target.value;
 
-    if (!selectedDate) return;
+    if (!selectedDate || !canDiscardShiftChanges()) return;
 
     const selectedMonday = getMonday(parseLocalDate(selectedDate));
     setSelectedWeekStart(toLocalISODate(selectedMonday));
@@ -318,6 +374,7 @@ function App() {
   );
 
   function showMessage(text) {
+    if (shiftEditorOpen) setShiftEditorMessage(text);
     setMessage(text);
     window.setTimeout(() => setMessage(""), 2500);
   }
@@ -531,6 +588,8 @@ function App() {
       showMessage("Schedule entry added.");
     }
 
+    setShiftEditorOpen(false);
+
     const savedDay = shiftForm.day;
     const savedStart = shiftForm.start;
 
@@ -546,59 +605,21 @@ function App() {
   }
 
   function startEditingShift(shift) {
-    setSelectedWeekStart(shift.weekStart);
-    setEditingShiftId(shift.id);
-    setShiftForm({
-      type: shift.type || "shift",
-      day: shift.day,
-      start: shift.start,
-      end: shift.end,
-      employeeId: String(shift.employeeId),
-      departmentId:
-        shift.departmentId || departments[0]?.id || "",
-      taskAssignments: [...shift.taskAssignments],
-    });
-    setTaskDepartmentId(shift.departmentId);
-
-    window.setTimeout(() => {
-      shiftFormRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
-
-      setHighlightShiftForm(true);
-      window.setTimeout(() => setHighlightShiftForm(false), 1800);
-    }, 50);
+    openShiftEditor(createShiftEditorForm(EMPTY_SHIFT_FORM, departments, { shift }), shift.weekStart, shift.id);
   }
 
   function startAddingFromGrid(employeeId, day) {
-    setEditingShiftId(null);
-    setShiftForm({
-      ...EMPTY_SHIFT_FORM,
-      end: calculateDefaultShiftEnd(
-        EMPTY_SHIFT_FORM.start,
-      ),
-      employeeId: String(employeeId),
-      day,
-      departmentId: departments[0]?.id || "",
-    });
-    setTaskDepartmentId(departments[0]?.id || "");
+    const employee = employees.find((item) => Number(item.id) === Number(employeeId));
+    openShiftEditor(createShiftEditorForm(EMPTY_SHIFT_FORM, departments, { employee, day }), selectedWeekStart);
+  }
 
-    window.setTimeout(() => {
-      shiftFormRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
-
-      setHighlightShiftForm(true);
-      window.setTimeout(
-        () => setHighlightShiftForm(false),
-        1800,
-      );
-    }, 50);
+  function startAddingEntry() {
+    openShiftEditor(createShiftEditorForm(EMPTY_SHIFT_FORM, departments), selectedWeekStart);
   }
 
   function cancelEditingShift() {
+    shiftEditorBaseline.current = null;
+    setShiftEditorMessage("");
     setEditingShiftId(null);
     setShiftForm({
       ...EMPTY_SHIFT_FORM,
@@ -1187,7 +1208,7 @@ function App() {
           onChange={importBackupFile}
         />
 
-        <header className="page-header">
+        <header className="page-header workspace-toolbar" aria-label="Workspace appearance">
           <div className="theme-toggle-group" role="group" aria-label="Theme selection">
             <button
               type="button"
@@ -1221,7 +1242,7 @@ function App() {
 
         {activePage === "schedule" && (
           <div
-            className={`two-panel-layout ${scheduleView === "grid" ? "grid-view-layout" : ""
+            className={`two-panel-layout schedule-workspace ${scheduleView === "grid" ? "grid-view-layout" : ""
               }`}
           >
             <section className="panel printable-schedule">
@@ -1240,6 +1261,7 @@ function App() {
                 </div>
 
                 <div className="schedule-toolbar">
+                  <button type="button" className="primary" ref={addEntryButtonRef} onClick={startAddingEntry}>Add entry</button>
                   <div className="view-switcher">
                     <button
                       type="button"
@@ -1713,14 +1735,16 @@ function App() {
               )}
             </section>
 
-            <aside
+            {shiftEditorOpen && <dialog
               ref={shiftFormRef}
-              className={`panel sticky-panel shift-form-panel ${highlightShiftForm ? "form-highlight" : ""
-                }`}
+              className="panel shift-form-panel shift-editor-drawer"
+              aria-modal="true"
+              aria-labelledby="shift-editor-title"
+              onCancel={(event) => { event.preventDefault(); closeShiftEditor(); }}
             >
               <div className="panel-title shift-form-title">
                 <div>
-                  <h2>
+                  <h2 id="shift-editor-title">
                     {editingShiftId
                       ? "Edit Schedule Entry"
                       : "Add Schedule Entry"}
@@ -1729,6 +1753,7 @@ function App() {
                     {formatWeekRange(selectedWeekStart)}
                   </p>
                 </div>
+                <button type="button" className="secondary" ref={shiftEditorCloseRef} onClick={closeShiftEditor}>Close</button>
               </div>
 
               <div className="shift-form-week-controls">
@@ -1789,6 +1814,7 @@ function App() {
               ) : (
                 <form className="form" onSubmit={addShift}>
                   <div className="shift-form-body">
+                  {shiftEditorMessage && <div className="notice" role="alert">{shiftEditorMessage}</div>}
                   <label>
                     Entry type
                     <select
@@ -2120,19 +2146,17 @@ function App() {
                             ? "Add vacation"
                             : "Add unavailability"}
                     </button>
-                    {editingShiftId && (
-                      <button
+                    <button
                         className="secondary"
                         type="button"
-                        onClick={cancelEditingShift}
+                        onClick={closeShiftEditor}
                       >
                         Cancel
                       </button>
-                    )}
                   </div>
                 </form>
               )}
-            </aside>
+            </dialog>}
           </div>
         )}
 
