@@ -1,0 +1,537 @@
+{
+  "app": "Harborlane Shift Planner",
+  "version": 1,
+  "exportedAt": "2026-11-02T12:00:00.000Z",
+  "data": {
+    "employees": [
+      {
+        "id": 4001,
+        "name": "Alex Morgan",
+        "departmentIds": [
+          "baking",
+          "mixers"
+        ]
+      },
+      {
+        "id": 4002,
+        "name": "Emma Carter",
+        "departmentIds": [
+          "sweets",
+          "baking"
+        ]
+      },
+      {
+        "id": 4003,
+        "name": "Lucas Bennett",
+        "departmentIds": [
+          "mixers",
+          "baking"
+        ]
+      },
+      {
+        "id": 4004,
+        "name": "Sofia Reed",
+        "departmentIds": [
+          "baking",
+          "sweets"
+        ]
+      },
+      {
+        "id": 4005,
+        "name": "Oliver Hayes",
+        "departmentIds": [
+          "drivers"
+        ]
+      },
+      {
+        "id": 4006,
+        "name": "Mia Collins",
+        "departmentIds": [
+          "cleaners"
+        ]
+      }
+    ],
+    "shifts": [
+      {
+        "id": 41001,
+        "type": "shift",
+        "weekStart": "2026-11-02",
+        "day": "Monday",
+        "start": "03:00",
+        "end": "11:00",
+        "employeeId": 4001,
+        "departmentId": "baking",
+        "taskAssignments": [
+          {
+            "departmentId": "baking",
+            "task": "Baking Breads"
+          },
+          {
+            "departmentId": "baking",
+            "task": "Bread finishing"
+          }
+        ]
+      },
+      {
+        "id": 41002,
+        "type": "shift",
+        "weekStart": "2026-11-02",
+        "day": "Monday",
+        "start": "06:00",
+        "end": "14:00",
+        "employeeId": 4002,
+        "departmentId": "sweets",
+        "taskAssignments": [
+          {
+            "departmentId": "sweets",
+            "task": "Cinnamon rolls"
+          },
+          {
+            "departmentId": "sweets",
+            "task": "Fruit pastries"
+          }
+        ]
+      },
+      {
+        "id": 41003,
+        "type": "shift",
+        "weekStart": "2026-11-02",
+        "day": "Monday",
+        "start": "05:00",
+        "end": "12:00",
+        "employeeId": 4005,
+        "departmentId": "drivers",
+        "taskAssignments": [
+          {
+            "departmentId": "drivers",
+            "task": "Morning delivery route"
+          },
+          {
+            "departmentId": "drivers",
+            "task": "Shop Delivery"
+          }
+        ]
+      },
+      {
+        "id": 41004,
+        "type": "shift",
+        "weekStart": "2026-11-02",
+        "day": "Monday",
+        "start": "22:00",
+        "end": "06:00",
+        "employeeId": 4003,
+        "departmentId": "mixers",
+        "taskAssignments": [
+          {
+            "departmentId": "mixers",
+            "task": "Starter refresh"
+          },
+          {
+            "departmentId": "mixers",
+            "task": "Mix Sourdough"
+          }
+        ]
+      },
+      {
+        "id": 41005,
+        "type": "shift",
+        "weekStart": "2026-11-02",
+        "day": "Tuesday",
+        "start": "03:00",
+        "end": "11:00",
+        "employeeId": 4001,
+        "departmentId": "baking",
+        "taskAssignments": [
+          {
+            "departmentId": "baking",
+            "task": "Preparations & Shaping"
+          },
+          {
+            "departmentId": "baking",
+            "task": "Baking Breads"
+          }
+        ]
+      },
+      {
+        "id": 41006,
+        "type": "shift",
+        "weekStart": "2026-11-02",
+        "day": "Tuesday",
+        "start": "12:00",
+        "end": "20:00",
+        "employeeId": 4004,
+        "departmentId": "baking",
+        "taskAssignments": [
+          {
+            "departmentId": "baking",
+            "task": "Sandwiches"
+          },
+          {
+            "departmentId": "baking",
+            "task": "Preparations & Shaping"
+          }
+        ]
+      },
+      {
+        "id": 41007,
+        "type": "shift",
+        "weekStart": "2026-11-02",
+        "day": "Tuesday",
+        "start": "14:00",
+        "end": "20:00",
+        "employeeId": 4006,
+        "departmentId": "cleaners",
+        "taskAssignments": [
+          {
+            "departmentId": "cleaners",
+            "task": "Dishes"
+          },
+          {
+            "departmentId": "cleaners",
+            "task": "Workstation sanitation"
+          }
+        ]
+      },
+      {
+        "id": 41008,
+        "type": "shift",
+        "weekStart": "2026-11-02",
+        "day": "Wednesday",
+        "start": "06:00",
+        "end": "14:00",
+        "employeeId": 4002,
+        "departmentId": "sweets",
+        "taskAssignments": [
+          {
+            "departmentId": "sweets",
+            "task": "Fruit pastries"
+          },
+          {
+            "departmentId": "sweets",
+            "task": "Cake finishing"
+          }
+        ]
+      },
+      {
+        "id": 41009,
+        "type": "shift",
+        "weekStart": "2026-11-02",
+        "day": "Wednesday",
+        "start": "22:00",
+        "end": "06:00",
+        "employeeId": 4003,
+        "departmentId": "mixers",
+        "taskAssignments": [
+          {
+            "departmentId": "mixers",
+            "task": "Mix Breads"
+          },
+          {
+            "departmentId": "mixers",
+            "task": "Mix Brioche"
+          }
+        ]
+      },
+      {
+        "id": 41010,
+        "type": "shift",
+        "weekStart": "2026-11-02",
+        "day": "Thursday",
+        "start": "03:00",
+        "end": "11:00",
+        "employeeId": 4001,
+        "departmentId": "baking",
+        "taskAssignments": [
+          {
+            "departmentId": "baking",
+            "task": "Focaccia & Pizza"
+          },
+          {
+            "departmentId": "baking",
+            "task": "Baking Breads"
+          }
+        ]
+      },
+      {
+        "id": 41011,
+        "type": "shift",
+        "weekStart": "2026-11-02",
+        "day": "Thursday",
+        "start": "05:00",
+        "end": "12:00",
+        "employeeId": 4005,
+        "departmentId": "drivers",
+        "taskAssignments": [
+          {
+            "departmentId": "drivers",
+            "task": "Shop Delivery"
+          },
+          {
+            "departmentId": "drivers",
+            "task": "Companies Delivery"
+          }
+        ]
+      },
+      {
+        "id": 41012,
+        "type": "shift",
+        "weekStart": "2026-11-02",
+        "day": "Thursday",
+        "start": "12:00",
+        "end": "20:00",
+        "employeeId": 4004,
+        "departmentId": "sweets",
+        "taskAssignments": [
+          {
+            "departmentId": "sweets",
+            "task": "Cinnamon rolls"
+          },
+          {
+            "departmentId": "sweets",
+            "task": "Preparations"
+          }
+        ]
+      },
+      {
+        "id": 41013,
+        "type": "shift",
+        "weekStart": "2026-11-02",
+        "day": "Friday",
+        "start": "06:00",
+        "end": "14:00",
+        "employeeId": 4002,
+        "departmentId": "sweets",
+        "taskAssignments": [
+          {
+            "departmentId": "sweets",
+            "task": "Cake finishing"
+          },
+          {
+            "departmentId": "sweets",
+            "task": "Fruit pastries"
+          }
+        ]
+      },
+      {
+        "id": 41014,
+        "type": "shift",
+        "weekStart": "2026-11-02",
+        "day": "Friday",
+        "start": "14:00",
+        "end": "20:00",
+        "employeeId": 4006,
+        "departmentId": "cleaners",
+        "taskAssignments": [
+          {
+            "departmentId": "cleaners",
+            "task": "Trays"
+          },
+          {
+            "departmentId": "cleaners",
+            "task": "Floor"
+          },
+          {
+            "departmentId": "cleaners",
+            "task": "Closing"
+          }
+        ]
+      },
+      {
+        "id": 41015,
+        "type": "shift",
+        "weekStart": "2026-11-02",
+        "day": "Friday",
+        "start": "22:00",
+        "end": "06:00",
+        "employeeId": 4003,
+        "departmentId": "mixers",
+        "taskAssignments": [
+          {
+            "departmentId": "mixers",
+            "task": "Starter refresh"
+          },
+          {
+            "departmentId": "mixers",
+            "task": "Mix Sourdough"
+          }
+        ]
+      },
+      {
+        "id": 41016,
+        "type": "shift",
+        "weekStart": "2026-11-02",
+        "day": "Saturday",
+        "start": "03:00",
+        "end": "11:00",
+        "employeeId": 4001,
+        "departmentId": "baking",
+        "taskAssignments": [
+          {
+            "departmentId": "baking",
+            "task": "Baking Breads"
+          },
+          {
+            "departmentId": "baking",
+            "task": "Bread finishing"
+          }
+        ]
+      },
+      {
+        "id": 41017,
+        "type": "shift",
+        "weekStart": "2026-11-02",
+        "day": "Saturday",
+        "start": "12:00",
+        "end": "20:00",
+        "employeeId": 4004,
+        "departmentId": "baking",
+        "taskAssignments": [
+          {
+            "departmentId": "baking",
+            "task": "Focaccia & Pizza"
+          },
+          {
+            "departmentId": "baking",
+            "task": "Cleaning"
+          }
+        ]
+      },
+      {
+        "id": 41018,
+        "type": "shift",
+        "weekStart": "2026-11-02",
+        "day": "Sunday",
+        "start": "05:00",
+        "end": "12:00",
+        "employeeId": 4005,
+        "departmentId": "drivers",
+        "taskAssignments": [
+          {
+            "departmentId": "drivers",
+            "task": "Morning delivery route"
+          }
+        ]
+      },
+      {
+        "id": 41019,
+        "type": "shift",
+        "weekStart": "2026-11-02",
+        "day": "Sunday",
+        "start": "06:00",
+        "end": "14:00",
+        "employeeId": 4002,
+        "departmentId": "sweets",
+        "taskAssignments": [
+          {
+            "departmentId": "sweets",
+            "task": "Cinnamon rolls"
+          },
+          {
+            "departmentId": "sweets",
+            "task": "Fruit pastries"
+          }
+        ]
+      },
+      {
+        "id": 41020,
+        "type": "shift",
+        "weekStart": "2026-11-02",
+        "day": "Sunday",
+        "start": "14:00",
+        "end": "20:00",
+        "employeeId": 4006,
+        "departmentId": "cleaners",
+        "taskAssignments": [
+          {
+            "departmentId": "cleaners",
+            "task": "Dishes"
+          },
+          {
+            "departmentId": "cleaners",
+            "task": "Workstation sanitation"
+          },
+          {
+            "departmentId": "cleaners",
+            "task": "Closing"
+          }
+        ]
+      },
+      {
+        "id": 41021,
+        "type": "vacation",
+        "weekStart": "2026-11-02",
+        "day": "Sunday",
+        "start": "00:00",
+        "end": "23:59",
+        "employeeId": 4004,
+        "departmentId": "",
+        "taskAssignments": []
+      }
+    ],
+    "departments": [
+      {
+        "id": "baking",
+        "name": "Baking",
+        "color": "#367A78",
+        "tasks": [
+          "Focaccia & Pizza",
+          "Baking Breads",
+          "Preparations & Shaping",
+          "Cleaning",
+          "Sandwiches",
+          "Bread finishing"
+        ]
+      },
+      {
+        "id": "mixers",
+        "name": "Mixing",
+        "color": "#9A7040",
+        "tasks": [
+          "Mix Breads",
+          "Mix Brioche",
+          "Mix Sourdough",
+          "Mix Zito",
+          "Starter refresh"
+        ]
+      },
+      {
+        "id": "sweets",
+        "name": "Sweets",
+        "color": "#945D78",
+        "tasks": [
+          "Snails",
+          "Loupák & Bulky",
+          "Koláčky",
+          "Preparations",
+          "Cinnamon rolls",
+          "Fruit pastries",
+          "Cake finishing"
+        ]
+      },
+      {
+        "id": "drivers",
+        "name": "Drivers",
+        "color": "#446E91",
+        "tasks": [
+          "Shop Delivery",
+          "Companies Delivery",
+          "Morning delivery route"
+        ]
+      },
+      {
+        "id": "cleaners",
+        "name": "Cleaners",
+        "color": "#667780",
+        "tasks": [
+          "Dishes",
+          "Mixers",
+          "Trays",
+          "Floor",
+          "Garage",
+          "Closing",
+          "Workstation sanitation"
+        ]
+      }
+    ]
+  }
+}
