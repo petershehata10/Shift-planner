@@ -1,0 +1,59 @@
+@media screen {
+  /* Both views keep the schedule full-width; the dialog is out of flow. */
+  main[data-page="schedule"] > .two-panel-layout.schedule-workspace {
+    display: block;
+  }
+
+  main[data-page="schedule"] > .schedule-workspace .shift-form-panel.shift-editor-drawer {
+    position: fixed;
+    inset: 0 0 0 auto;
+    margin: 0;
+    width: min(480px, 100%);
+    max-width: none;
+    height: 100dvh;
+    max-height: 100dvh;
+    min-height: 0;
+    padding: 20px 20px 0;
+    border: 1px solid var(--color-border);
+    border-radius: 16px 0 0 16px;
+    background: var(--color-surface);
+    color: var(--color-text);
+    overflow: hidden;
+  }
+
+  .shift-editor-drawer::backdrop {
+    background: rgb(15 25 33 / 45%);
+  }
+
+  .shift-editor-drawer .shift-form-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  .shift-editor-drawer .shift-form-title {
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+
+  .shift-editor-drawer .shift-form-title .secondary {
+    padding: 8px 12px;
+  }
+
+  .shift-editor-drawer .form-actions {
+    background: var(--color-surface);
+  }
+
+  @media (max-width: 600px) {
+    main[data-page="schedule"] > .schedule-workspace .shift-form-panel.shift-editor-drawer {
+      width: 100%;
+      border-radius: 0;
+    }
+  }
+}
+
+@media print {
+  .shift-editor-drawer {
+    display: none !important;
+  }
+}

@@ -1,0 +1,298 @@
+/* Screen-only schedule refinement. Higher-specificity rules supersede the
+   historical compact-grid overrides without changing the print stylesheet. */
+@media screen {
+  main:has(.printable-schedule) {
+    width: 100%;
+  }
+
+  .two-panel-layout .printable-schedule {
+    min-width: 0;
+  }
+
+  .grid-view-layout .schedule-grid-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    scrollbar-color: var(--color-text-secondary) var(--color-surface-subtle);
+    scroll-padding-inline-start: 184px;
+  }
+
+  .grid-view-layout .schedule-grid {
+    --employee-column: 184px;
+    width: 100%;
+    min-width: calc(var(--employee-column) + 7 * 166px);
+    grid-template-columns: var(--employee-column) repeat(7, minmax(166px, 1fr));
+    border: 0;
+    border-radius: 0;
+    overflow: visible;
+  }
+
+  .grid-view-layout .grid-corner,
+  .grid-view-layout .grid-day-header {
+    padding: 14px 10px;
+    background: var(--color-surface-subtle);
+  }
+
+  .grid-view-layout .grid-corner,
+  .grid-view-layout .grid-employee {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    border-right-color: var(--color-border);
+  }
+
+  .grid-view-layout .grid-corner {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+  }
+
+  .grid-view-layout .grid-day-header strong {
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .grid-view-layout .grid-day-header span {
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .grid-view-layout .schedule-grid > :nth-child(8n + 7),
+  .grid-view-layout .schedule-grid > :nth-child(8n + 8) {
+    background: var(--color-weekend-tint);
+  }
+
+  .grid-view-layout .grid-employee {
+    align-items: flex-start;
+    gap: 10px;
+    padding: 16px 12px;
+    background: var(--color-surface);
+  }
+
+  .grid-view-layout .grid-employee > div:last-child {
+    min-width: 0;
+  }
+
+  .grid-view-layout .grid-employee strong {
+    font-size: 13px;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+  }
+
+  .grid-view-layout .grid-employee span {
+    font-size: 12px;
+    line-height: 1.5;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .grid-view-layout .grid-shift-cell {
+    min-height: 112px;
+    padding: 10px !important; /* Replace the legacy absolute Add-button space. */
+    background: var(--color-surface);
+  }
+
+  .grid-view-layout .grid-add-button {
+    position: static;
+    display: block;
+    margin: 0 0 10px auto;
+    padding: 5px 8px;
+    min-height: 30px;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    color: var(--color-text-secondary);
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .grid-view-layout .grid-empty {
+    padding: 4px 0 12px;
+    font-size: 13px;
+    color: var(--color-text-secondary);
+  }
+
+  .grid-view-layout .grid-shift-card {
+    margin-bottom: 10px;
+    padding: 10px;
+    border: 1px solid var(--color-border);
+    border-radius: 9px;
+    /* Inline department backgrounds remain available for legacy printing. */
+    background: var(--color-surface-subtle) !important;
+    color: var(--color-text) !important;
+    box-shadow: none;
+  }
+
+  .grid-view-layout .grid-shift-card:last-child {
+    margin-bottom: 0;
+  }
+
+  .grid-view-layout .grid-shift-card-top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 8px;
+    margin-bottom: 8px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .grid-view-layout .grid-shift-card-top strong {
+    font-size: 13px;
+    line-height: 1.4;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .grid-view-layout .grid-shift-card-top span {
+    font-size: 12px;
+    opacity: 1;
+    color: var(--color-text-secondary);
+  }
+
+  .grid-view-layout .grid-shift-card > .grid-department-badge {
+    display: inline-block;
+    max-width: 100%;
+    margin: 0 0 8px;
+    padding: 4px 7px;
+    border-radius: 6px;
+    font-size: 12px;
+    line-height: 1.4;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+  }
+
+  .grid-view-layout .grid-task-list {
+    gap: 5px;
+  }
+
+  .grid-view-layout .grid-task-list span,
+  .grid-view-layout .grid-status-text {
+    padding: 0;
+    background: transparent;
+    color: var(--color-text-secondary);
+    font-size: 12px;
+    line-height: 1.5;
+    font-weight: 500;
+    opacity: 1;
+  }
+
+  .grid-view-layout .grid-vacation-card {
+    background: var(--color-success-surface) !important;
+    border-color: var(--color-success-border);
+  }
+
+  .grid-view-layout .grid-vacation-card > .grid-department-badge {
+    background: var(--color-success-surface);
+    color: var(--color-success-text);
+  }
+
+  .grid-view-layout .grid-unavailability-card {
+    background: var(--color-warning-surface) !important;
+    border-color: var(--color-warning-border);
+  }
+
+  .grid-view-layout .grid-unavailability-card > .grid-department-badge {
+    background: var(--color-warning-surface);
+    color: var(--color-warning-text);
+  }
+
+  .grid-view-layout .grid-card-actions {
+    gap: 6px;
+    margin-top: 12px;
+  }
+
+  .grid-view-layout .grid-card-actions button {
+    min-width: 32px;
+    min-height: 32px;
+    padding: 5px 8px;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .grid-view-layout .grid-card-actions button:hover,
+  .grid-view-layout .grid-add-button:hover {
+    background: var(--color-surface-hover);
+    color: var(--color-text);
+    border-color: var(--color-primary);
+  }
+
+  .grid-view-layout .schedule-grid-wrapper:focus-visible,
+  .grid-view-layout button:focus-visible,
+  .printable-schedule .row-actions button:focus-visible,
+  .printable-schedule .view-switcher button:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: -3px;
+  }
+
+  .printable-schedule .list-employee-group {
+    grid-template-columns: 160px minmax(0, 1fr);
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .printable-schedule .list-entry-card {
+    grid-template-columns: 124px minmax(0, 1fr) auto;
+    min-height: 0;
+    gap: 12px;
+    padding: 12px;
+    border: 1px solid var(--color-border);
+  }
+
+  .printable-schedule .list-entry-time strong {
+    font-size: 13px;
+    line-height: 1.5;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .printable-schedule .list-entry-time span,
+  .printable-schedule .list-employee-header span,
+  .printable-schedule .list-status-note,
+  .printable-schedule .day-title small,
+  .printable-schedule .day-title > span {
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-text-secondary);
+  }
+
+  .printable-schedule .list-shift-tasks span,
+  .printable-schedule .list-entry-badge {
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  .printable-schedule .row-actions button {
+    min-width: 32px;
+    min-height: 32px;
+    font-size: 12px;
+  }
+
+  @media (max-width: 1180px) {
+    .printable-schedule .list-employee-group {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .printable-schedule .list-entry-card {
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .printable-schedule .list-entry-time {
+      grid-column: 1 / -1;
+    }
+  }
+
+  @media (max-width: 520px) {
+    .grid-view-layout .schedule-grid {
+      --employee-column: 136px;
+    }
+
+    .grid-view-layout .schedule-grid-wrapper {
+      scroll-padding-inline-start: 136px;
+    }
+
+    .grid-view-layout .grid-employee {
+      flex-direction: column;
+      padding: 12px 10px;
+    }
+  }
+}

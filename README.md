@@ -1,96 +1,101 @@
-# Smart Shift Planner
+# Shift Planner
 
-A responsive weekly shift-planning application built with React and Vite.
-
-The application was created to simplify weekly employee scheduling for small teams and businesses. It allows managers to organize employees, departments, tasks, working shifts, vacations, and unavailability in one place.
-
-## Project Overview
-
-The Bread Guy Shift Planner helps manage weekly bakery operations through a clear visual schedule.
-
-The project was designed around a real workplace need and includes tools for creating schedules, checking conflicts, printing weekly plans, and backing up browser data.
+A React application for planning a small team's weekly schedule. The portfolio demo uses **Harborlane Artisan Bakery**, a fictional business, and invented employees and work assignments.
 
 ## Screenshots
 
-### Weekly Schedule — Grid View
+### Weekly grid
 
-![Weekly schedule grid](screenshots/weekly-grid.png)
+Light and dark appearances of the Monday-Sunday schedule:
 
-### Weekly Schedule — List View
+![Weekly schedule grid in light mode](docs/screenshots/01-weekly-grid-light.png)
 
-![Weekly schedule list view](screenshots/list-view.png)
+![Weekly schedule grid in dark mode](docs/screenshots/02-weekly-grid-dark.png)
 
-### Employees Management
+### List view
 
-![Employees page](screenshots/employees.png)
+![Schedule list in light mode](docs/screenshots/03-schedule-list_light.png)
 
-### Add or Edit a Shift
+![Schedule list in dark mode](docs/screenshots/03-schedule-list_dark.png)
 
-![Add schedule entry form](screenshots/add-shift.png)
+### Add and edit entries
 
-### Departments and Tasks
+![Responsive schedule entry drawer](docs/screenshots/04-add-edit-shift.png)
 
-![Departments and tasks page](screenshots/departments-tasks.png)
+### Employees
 
-### Print and PDF Preview
+![Employee list and department assignments](docs/screenshots/05-employees.png)
 
-![Print preview](screenshots/print-preview.png)
+### Departments and tasks
 
-### Backup and Restore
+![Department colors and task management](docs/screenshots/06-departments.png)
 
-![Backup and restore page](screenshots/backup-restore.png)
+### Print preview
 
-## Main Features
+![Weekly schedule print preview](docs/screenshots/07-print-preview.png)
 
-- Weekly schedule from Monday to Sunday
-- Grid and list schedule views
-- Add, edit, and delete employees
-- Assign employees to multiple departments
-- Create and manage departments and tasks
-- Add normal shifts, vacations, and unavailability
-- Select tasks from multiple departments
-- Automatic shift-duration calculation
-- Automatic default shift end time
-- Employee working-hours calculation
-- Overlapping-shift warnings
-- Custom colors for each department
-- Print preview and PDF export
-- Compact task display for printing
-- Local browser storage
-- Export all data as a JSON backup
-- Import and replace existing data
-- Import and merge data without duplicating shifts
-- Responsive interface for different screen sizes
+## Features
 
-## Technologies Used
+- Monday-Sunday Grid and List views, week navigation, and a date picker.
+- Horizontally scrollable grid with pinned employee details and weekly working-hour totals.
+- One responsive Add/Edit drawer for shifts, vacation, and unavailability, with validation, Escape/Cancel handling, and unsaved-change confirmation.
+- Employee management with multiple department assignments and duplicate-name checks.
+- Department and task management, custom department colors, and tasks selected from multiple departments.
+- Conflict detection for the same employee, including overnight entries and Sunday-to-Monday overlaps across weeks; a separate warnings view.
+- Light, Dark, and System themes, plus a collapsible desktop sidebar.
+- Local saving in browser localStorage. Unreadable JSON or invalid outer data shapes are protected from automatic overwrite, with visible load/save warnings.
+- JSON backup export and restore, with replace and merge modes.
+- A4 landscape print preview and printing or Save as PDF through the browser.
 
-- React
-- JavaScript
-- Vite
-- HTML5
-- CSS3
-- Local Storage
-- Git
-- GitHub
+The app has no backend or account system. Data stays in the current browser profile; export a backup before clearing browser data or moving to another device. Merge uses existing ID/name matching rules and is not a synchronization service.
 
-## How the Data Is Stored
+## Technology
 
-The application currently stores data in the browser using `localStorage`.
+React 19 and React DOM, JavaScript, Vite 8, and CSS. Development tooling includes the Vite React plugin and Oxlint. Regression tests use Node's built-in test runner; no separate test framework is installed.
 
-The following data is stored locally:
+Manrope and Inter are loaded through Google Fonts, with system font fallbacks when unavailable.
 
-- Employees
-- Departments
-- Tasks
-- Shifts
-- Vacations
-- Unavailability
+## Run locally
 
-The Backup and Restore page allows the user to export this information as a JSON file and import it on another device or browser.
+Use Node.js **20.19+ in the 20.x series, or 22.12+**, matching the installed Vite package's engine requirement, and npm.
 
-## Installation
+From your local clone of this repository:
 
-Clone the repository:
+```sh
+npm ci
+npm run dev
+```
 
-```bash
-git clone https://github.com/petershehata10/Shift-Planner
+Open the local URL printed by Vite. On Windows PowerShell, use `npm.cmd` if script execution policy prevents running `npm`.
+
+## Fictional demo data
+
+[Download the demo backup](demo/harborlane-demo.json) for November 2-8, 2026. It contains six fictional employees, five departments, 20 working shifts (including three overnight shifts), and one vacation entry.
+
+1. Open the app in a separate, empty browser profile.
+2. Go to **Backup & restore**, choose **Import and replace**, and select `demo/harborlane-demo.json`.
+3. Confirm replacement in that isolated profile, then select the week beginning **November 2, 2026**.
+
+**Import and replace overwrites that profile's current planner data.** Do not load the demo over a real schedule. The demo does not load automatically.
+
+Harborlane Artisan Bakery, the demonstration employees, and their schedules are fictional and do not represent a real employer or workforce.
+
+## Verification
+
+Run the existing regression suite, lint, and production build:
+
+```sh
+node --test src/lib/*.test.js
+npm run lint
+npm run build
+```
+
+The current suite has **57 passing tests** covering date/time calculations, overnight conflicts, hour totals, storage guards, duplicate names, editor form preparation/change detection, badge contrast choices, avatars, and theme utilities. These are utility tests, not browser interaction tests. Lint currently reports two unused-variable warnings in `src/App.jsx`: `selectedDepartment` and `getEmployee`.
+
+To serve the production build locally:
+
+```sh
+npm run preview
+```
+
+For browser checks, review both schedule views and themes at desktop and mobile widths, exercise Add/Edit/Delete and drawer keyboard behavior using disposable demo data, and inspect Print Preview and a saved PDF. Real printer output and pagination depend on the browser and print settings.

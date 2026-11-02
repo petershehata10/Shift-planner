@@ -1,15 +1,19 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import "./App.css";
-
-const DAYS = [
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday",
-];
+import "./styles/schedule.css";
+import "./styles/shiftEditor.css";
+import { createShiftEditorForm, editorSnapshot, hasUnsavedEditorChanges } from "./lib/shiftEditor.js";
+import {
+  DAYS, toLocalISODate, getMonday, addDays, parseLocalDate,
+  formatWeekRange, formatDayDate, snapTimeToQuarterHour,
+  calculateDefaultShiftEnd, timeToMinutes, calculateShiftHours,
+  shiftsOverlap, calculateEmployeeHours, getScheduleWarnings,
+} from "./lib/scheduling.js";
+import { useSavedArray } from "./lib/useSavedArray.js";
+import { hasDuplicateEmployeeName } from "./lib/employees.js";
+import { useTheme } from "./lib/useTheme.js";
+import { getAvatarColor, getAvatarInitials } from "./lib/avatars.js";
+import { badgeColors } from "./lib/badgeColors.js";
 
 const DEFAULT_DEPARTMENTS = [
   {
@@ -81,86 +85,6 @@ const EMPTY_SHIFT_FORM = {
   departmentId: "baking",
   taskAssignments: [],
 };
-
-function loadSaved(key, fallback) {
-  try {
-    const value = localStorage.getItem(key);
-    return value ? JSON.parse(value) : fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-function toLocalISODate(date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-function getMonday(date = new Date()) {
-  const result = new Date(date);
-  result.setHours(12, 0, 0, 0);
-
-  const day = result.getDay();
-  const distanceFromMonday = day === 0 ? -6 : 1 - day;
-  result.setDate(result.getDate() + distanceFromMonday);
-
-  return result;
-}
-
-function addDays(date, amount) {
-  const result = new Date(date);
-  result.setDate(result.getDate() + amount);
-  return result;
-}
-
-function parseLocalDate(dateString) {
-  const [year, month, day] = dateString.split("-").map(Number);
-  return new Date(year, month - 1, day, 12, 0, 0, 0);
-}
-
-function formatWeekRange(weekStart) {
-  const monday = parseLocalDate(weekStart);
-  const sunday = addDays(monday, 6);
-
-  const sameMonth = monday.getMonth() === sunday.getMonth();
-  const sameYear = monday.getFullYear() === sunday.getFullYear();
-
-  const monthDay = new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-  });
-
-  if (sameMonth && sameYear) {
-    const month = new Intl.DateTimeFormat("en-US", {
-      month: "short",
-    }).format(monday);
-
-    return `${month} ${monday.getDate()} – ${sunday.getDate()}, ${sunday.getFullYear()}`;
-  }
-
-  if (sameYear) {
-    return `${monthDay.format(monday)} – ${monthDay.format(sunday)}, ${sunday.getFullYear()}`;
-  }
-
-  const fullDate = new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-
-  return `${fullDate.format(monday)} – ${fullDate.format(sunday)}`;
-}
-
-function formatDayDate(weekStart, dayIndex) {
-  const date = addDays(parseLocalDate(weekStart), dayIndex);
-
-  return new Intl.DateTimeFormat("en-US", {
-    day: "numeric",
-    month: "short",
-  }).format(date);
-}
 
 function normalizeShift(shift) {
   const currentWeekStart = toLocalISODate(getMonday());
@@ -258,82 +182,20 @@ function getContrastText(hexColor) {
   return brightness > 165 ? "#241F1B" : "#FFFFFF";
 }
 
-function minutesToTime(totalMinutes) {
-  const normalizedMinutes =
-    ((totalMinutes % 1440) + 1440) % 1440;
-  const hours = String(
-    Math.floor(normalizedMinutes / 60),
-  ).padStart(2, "0");
-  const minutes = String(
-    normalizedMinutes % 60,
-  ).padStart(2, "0");
-
-  return `${hours}:${minutes}`;
-}
-
-function snapTimeToQuarterHour(time) {
-  if (!time) return "00:00";
-
-  const totalMinutes = timeToMinutes(time);
-  const roundedMinutes = Math.round(totalMinutes / 15) * 15;
-
-  return minutesToTime(roundedMinutes);
-}
-
-function calculateDefaultShiftEnd(start) {
-  return minutesToTime(timeToMinutes(start) + 8 * 60 + 30);
-}
-
-function timeToMinutes(time) {
-  const [hours, minutes] = time.split(":").map(Number);
-  return hours * 60 + minutes;
-}
-
-function calculateShiftHours(start, end) {
-  const startMinutes = timeToMinutes(start);
-  let endMinutes = timeToMinutes(end);
-
-  if (endMinutes <= startMinutes) {
-    endMinutes += 24 * 60;
-  }
-
-  const hours = (endMinutes - startMinutes) / 60;
-  return Number.isInteger(hours) ? hours : Number(hours.toFixed(2));
-}
-
-function shiftsOverlap(first, second) {
-  if (
-    first.weekStart !== second.weekStart ||
-    first.day !== second.day ||
-    Number(first.employeeId) !== Number(second.employeeId)
-  ) {
-    return false;
-  }
-
-  const firstStart = timeToMinutes(first.start);
-  let firstEnd = timeToMinutes(first.end);
-  const secondStart = timeToMinutes(second.start);
-  let secondEnd = timeToMinutes(second.end);
-
-  if (firstEnd <= firstStart) firstEnd += 1440;
-  if (secondEnd <= secondStart) secondEnd += 1440;
-
-  return firstStart < secondEnd && secondStart < firstEnd;
-}
-
 function App() {
-  const [employees, setEmployees] = useState(() =>
-    loadSaved("shiftPlannerEmployees", []),
+  const { themePreference, setTheme } = useTheme();
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  const [employees, setEmployees, employeesBlocked, employeesWriteFailed] = useSavedArray(
+    "shiftPlannerEmployees", [],
   );
 
-  const [shifts, setShifts] = useState(() =>
-    loadSaved("shiftPlannerShifts", []).map(normalizeShift),
+  const [shifts, setShifts, shiftsBlocked, shiftsWriteFailed] = useSavedArray(
+    "shiftPlannerShifts", [], (value) => value.map(normalizeShift),
   );
 
-  const [departments, setDepartments] = useState(() =>
-    normalizeDepartments(
-      loadSaved("shiftPlannerDepartments", DEFAULT_DEPARTMENTS),
-    ),
+  const [departments, setDepartments, departmentsBlocked, departmentsWriteFailed] = useSavedArray(
+    "shiftPlannerDepartments", DEFAULT_DEPARTMENTS, normalizeDepartments,
   );
 
   const [employeeForm, setEmployeeForm] = useState(EMPTY_EMPLOYEE_FORM);
@@ -356,7 +218,12 @@ function App() {
   const [editingTaskName, setEditingTaskName] = useState("");
   const [editingShiftId, setEditingShiftId] = useState(null);
   const [taskDepartmentId, setTaskDepartmentId] = useState("baking");
-  const [highlightShiftForm, setHighlightShiftForm] = useState(false);
+  const [shiftEditorOpen, setShiftEditorOpen] = useState(false);
+  const [shiftEditorMessage, setShiftEditorMessage] = useState("");
+  const shiftEditorBaseline = useRef(null);
+  const shiftEditorTrigger = useRef(null);
+  const shiftEditorCloseRef = useRef(null);
+  const addEntryButtonRef = useRef(null);
   const shiftFormRef = useRef(null);
   const [highlightEmployeeForm, setHighlightEmployeeForm] = useState(false);
   const employeeFormRef = useRef(null);
@@ -366,22 +233,62 @@ function App() {
   const pendingImportModeRef = useRef("replace");
 
   useEffect(() => {
-    localStorage.setItem(
-      "shiftPlannerEmployees",
-      JSON.stringify(employees),
-    );
-  }, [employees]);
+    if (!shiftEditorOpen) return;
+    const dialog = shiftFormRef.current;
+    const trigger = shiftEditorTrigger.current;
+    const fallbackTrigger = addEntryButtonRef.current;
+    const previousOverflow = document.body.style.overflow;
+    dialog.showModal();
+    document.body.style.overflow = "hidden";
+    shiftEditorCloseRef.current?.focus();
+    return () => {
+      dialog.close();
+      document.body.style.overflow = previousOverflow;
+      if (trigger?.isConnected) trigger.focus();
+      else fallbackTrigger?.focus();
+    };
+  }, [shiftEditorOpen]);
 
   useEffect(() => {
-    localStorage.setItem("shiftPlannerShifts", JSON.stringify(shifts));
-  }, [shifts]);
+    if (shiftEditorOpen && shiftEditorBaseline.current === null) {
+      shiftEditorBaseline.current = editorSnapshot(shiftForm, selectedWeekStart);
+    }
+  }, [shiftEditorOpen, shiftForm, selectedWeekStart]);
 
-  useEffect(() => {
-    localStorage.setItem(
-      "shiftPlannerDepartments",
-      JSON.stringify(departments),
-    );
-  }, [departments]);
+  function canDiscardShiftChanges() {
+    return !shiftEditorOpen
+      || !hasUnsavedEditorChanges(shiftEditorBaseline.current, shiftForm, selectedWeekStart)
+      || window.confirm("Discard unsaved schedule entry changes?");
+  }
+
+  function closeShiftEditor() {
+    if (!canDiscardShiftChanges()) return;
+    setShiftEditorOpen(false);
+    setShiftEditorMessage("");
+    cancelEditingShift();
+  }
+
+  function openShiftEditor(form, weekStart, editingId = null) {
+    shiftEditorTrigger.current = document.activeElement;
+    shiftEditorBaseline.current = editorSnapshot(form, weekStart);
+    setSelectedWeekStart(weekStart);
+    setEditingShiftId(editingId);
+    setShiftForm(form);
+    setTaskDepartmentId(form.departmentId);
+    setShiftEditorMessage("");
+    setShiftEditorOpen(true);
+  }
+
+  const blockedStorage = [
+    employeesBlocked && "employees",
+    shiftsBlocked && "shifts",
+    departmentsBlocked && "departments",
+  ].filter(Boolean).join(", ");
+  const failedStorage = [
+    employeesWriteFailed && "employees",
+    shiftsWriteFailed && "shifts",
+    departmentsWriteFailed && "departments",
+  ].filter(Boolean).join(", ");
 
   const selectedDepartment = departments.find(
     (department) => department.id === shiftForm.departmentId,
@@ -405,6 +312,7 @@ function App() {
   );
 
   function changeWeek(numberOfWeeks) {
+    if (!canDiscardShiftChanges()) return;
     const currentMonday = parseLocalDate(selectedWeekStart);
     const nextMonday = addDays(currentMonday, numberOfWeeks * 7);
     setSelectedWeekStart(toLocalISODate(nextMonday));
@@ -412,6 +320,7 @@ function App() {
   }
 
   function goToCurrentWeek() {
+    if (!canDiscardShiftChanges()) return;
     setSelectedWeekStart(toLocalISODate(getMonday()));
     cancelEditingShift();
   }
@@ -447,64 +356,25 @@ function App() {
   function selectDateWeek(event) {
     const selectedDate = event.target.value;
 
-    if (!selectedDate) return;
+    if (!selectedDate || !canDiscardShiftChanges()) return;
 
     const selectedMonday = getMonday(parseLocalDate(selectedDate));
     setSelectedWeekStart(toLocalISODate(selectedMonday));
     cancelEditingShift();
   }
 
-  const employeeHours = useMemo(() => {
-    const totals = {};
+  const employeeHours = useMemo(
+    () => calculateEmployeeHours(employees, visibleWeekShifts),
+    [employees, visibleWeekShifts],
+  );
 
-    employees.forEach((employee) => {
-      totals[employee.id] = 0;
-    });
-
-    visibleWeekShifts
-      .filter((shift) => shift.type === "shift")
-      .forEach((shift) => {
-        totals[shift.employeeId] =
-          (totals[shift.employeeId] || 0) +
-          calculateShiftHours(shift.start, shift.end);
-      });
-
-    return totals;
-  }, [employees, visibleWeekShifts]);
-
-  const warnings = useMemo(() => {
-    const result = [];
-
-    visibleWeekShifts.forEach((shift, index) => {
-      const employee = employees.find(
-        (item) => item.id === Number(shift.employeeId),
-      );
-
-      if (
-        shift.type === "shift" &&
-        employee &&
-        !employee.departmentIds.includes(shift.departmentId)
-      ) {
-        result.push({
-          id: `department-${shift.id}`,
-          text: `${employee.name} is not assigned to this department.`,
-        });
-      }
-
-      visibleWeekShifts.slice(index + 1).forEach((otherShift) => {
-        if (shiftsOverlap(shift, otherShift)) {
-          result.push({
-            id: `overlap-${shift.id}-${otherShift.id}`,
-            text: `${employee?.name || "Employee"} has overlapping shifts on ${shift.day}.`,
-          });
-        }
-      });
-    });
-
-    return result;
-  }, [employees, visibleWeekShifts]);
+  const warnings = useMemo(
+    () => getScheduleWarnings(shifts, employees, selectedWeekStart),
+    [shifts, employees, selectedWeekStart],
+  );
 
   function showMessage(text) {
+    if (shiftEditorOpen) setShiftEditorMessage(text);
     setMessage(text);
     window.setTimeout(() => setMessage(""), 2500);
   }
@@ -549,6 +419,11 @@ function App() {
 
     if (!employeeForm.name.trim()) {
       showMessage("Enter the employee name.");
+      return;
+    }
+
+    if (hasDuplicateEmployeeName(employees, employeeForm.name, editingEmployeeId)) {
+      showMessage("An employee with this name already exists.");
       return;
     }
 
@@ -713,6 +588,8 @@ function App() {
       showMessage("Schedule entry added.");
     }
 
+    setShiftEditorOpen(false);
+
     const savedDay = shiftForm.day;
     const savedStart = shiftForm.start;
 
@@ -728,59 +605,21 @@ function App() {
   }
 
   function startEditingShift(shift) {
-    setSelectedWeekStart(shift.weekStart);
-    setEditingShiftId(shift.id);
-    setShiftForm({
-      type: shift.type || "shift",
-      day: shift.day,
-      start: shift.start,
-      end: shift.end,
-      employeeId: String(shift.employeeId),
-      departmentId:
-        shift.departmentId || departments[0]?.id || "",
-      taskAssignments: [...shift.taskAssignments],
-    });
-    setTaskDepartmentId(shift.departmentId);
-
-    window.setTimeout(() => {
-      shiftFormRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
-
-      setHighlightShiftForm(true);
-      window.setTimeout(() => setHighlightShiftForm(false), 1800);
-    }, 50);
+    openShiftEditor(createShiftEditorForm(EMPTY_SHIFT_FORM, departments, { shift }), shift.weekStart, shift.id);
   }
 
   function startAddingFromGrid(employeeId, day) {
-    setEditingShiftId(null);
-    setShiftForm({
-      ...EMPTY_SHIFT_FORM,
-      end: calculateDefaultShiftEnd(
-        EMPTY_SHIFT_FORM.start,
-      ),
-      employeeId: String(employeeId),
-      day,
-      departmentId: departments[0]?.id || "",
-    });
-    setTaskDepartmentId(departments[0]?.id || "");
+    const employee = employees.find((item) => Number(item.id) === Number(employeeId));
+    openShiftEditor(createShiftEditorForm(EMPTY_SHIFT_FORM, departments, { employee, day }), selectedWeekStart);
+  }
 
-    window.setTimeout(() => {
-      shiftFormRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
-
-      setHighlightShiftForm(true);
-      window.setTimeout(
-        () => setHighlightShiftForm(false),
-        1800,
-      );
-    }, 50);
+  function startAddingEntry() {
+    openShiftEditor(createShiftEditorForm(EMPTY_SHIFT_FORM, departments), selectedWeekStart);
   }
 
   function cancelEditingShift() {
+    shiftEditorBaseline.current = null;
+    setShiftEditorMessage("");
     setEditingShiftId(null);
     setShiftForm({
       ...EMPTY_SHIFT_FORM,
@@ -1031,7 +870,7 @@ function App() {
 
   function exportAllData() {
     const backup = {
-      app: "Bread Guy Shift Planner",
+      app: "Harborlane Shift Planner",
       version: 1,
       exportedAt: new Date().toISOString(),
       data: { employees, shifts, departments },
@@ -1045,7 +884,7 @@ function App() {
     const link = document.createElement("a");
 
     link.href = downloadUrl;
-    link.download = `bread-guy-shift-backup-${fileDate}.json`;
+    link.download = `harborlane-shift-backup-${fileDate}.json`;
     document.body.appendChild(link);
     link.click();
     link.remove();
@@ -1071,7 +910,7 @@ function App() {
       !Array.isArray(importedData.shifts) ||
       !Array.isArray(importedData.departments)
     ) {
-      throw new Error("This is not a valid Bread Guy backup file.");
+      throw new Error("This is not a valid Shift Planner backup file.");
     }
 
     return {
@@ -1248,64 +1087,119 @@ function App() {
   }
 
   return (
-    <div className="app">
+    <div className={`app${sidebarCollapsed ? " sidebar-collapsed" : ""}`}>
       {message && <div className="toast">{message}</div>}
 
       <aside className="sidebar">
+        <button
+          type="button"
+          className="sidebar-toggle"
+          onClick={() => setSidebarCollapsed((collapsed) => !collapsed)}
+          aria-expanded={!sidebarCollapsed}
+          aria-controls="workspace-navigation"
+          aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <rect x="3" y="4" width="18" height="16" rx="2" />
+            <path d="M9 4v16" />
+            <path d={sidebarCollapsed ? "m13 9 3 3-3 3" : "m16 9-3 3 3 3"} />
+          </svg>
+        </button>
         <div className="brand">
           <div className="logo">
-            <img src="/breadguylogo.png" alt="Bread Guy logo" />
+            <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <rect width="36" height="36" rx="10" fill="#176C78"/>
+              <path d="M8 22 Q12 10 18 14 Q22 18 28 10" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+              <path d="M8 27 Q14 20 20 23 Q24 26 28 18" stroke="#9EDCDA" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+              <circle cx="18" cy="14" r="2.5" fill="#D69A54"/>
+            </svg>
           </div>
 
           <div>
-            <strong>Bread Guy</strong>
-            <span>Shift Planner</span>
+            <strong>Harborlane</strong>
+            <span>Artisan Bakery</span>
+            <span>Demo workspace</span>
           </div>
         </div>
 
-        <nav>
+        <nav id="workspace-navigation" aria-label="Workspace">
           <button
             className={activePage === "schedule" ? "active" : ""}
+            aria-label="Weekly Schedule"
+            title="Weekly Schedule"
+            aria-current={activePage === "schedule" ? "page" : undefined}
             onClick={() => setActivePage("schedule")}
           >
-            Weekly Schedule
+            <svg className="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 6h16v14H4z M8 3v6 M16 3v6 M4 11h16" /></svg>
+            <span className="nav-label">Weekly Schedule</span>
           </button>
 
           <button
             className={activePage === "employees" ? "active" : ""}
+            aria-label="Employees"
+            title="Employees"
+            aria-current={activePage === "employees" ? "page" : undefined}
             onClick={() => setActivePage("employees")}
           >
-            Employees
+            <svg className="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M20 21v-2a4 4 0 0 0-3-3.87 M9 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8 M17 3a4 4 0 0 1 0 8" /></svg>
+            <span className="nav-label">Employees</span>
           </button>
 
           <button
             className={activePage === "departments" ? "active" : ""}
+            aria-label="Departments & Tasks"
+            title="Departments & Tasks"
+            aria-current={activePage === "departments" ? "page" : undefined}
             onClick={() => setActivePage("departments")}
           >
-            Departments & Tasks
+            <svg className="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z" /></svg>
+            <span className="nav-label">Departments & Tasks</span>
           </button>
 
           <button
             className={activePage === "backup" ? "active" : ""}
+            aria-label="Backup & Restore"
+            title="Backup & Restore"
+            aria-current={activePage === "backup" ? "page" : undefined}
             onClick={() => setActivePage("backup")}
           >
-            Backup & Restore
+            <svg className="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 16v5h16v-5 M12 3v13 M7 8l5-5 5 5" /></svg>
+            <span className="nav-label">Backup & Restore</span>
           </button>
 
           <button
             className={activePage === "warnings" ? "active" : ""}
+            aria-label="Warnings"
+            title="Warnings"
+            aria-current={activePage === "warnings" ? "page" : undefined}
             onClick={() => setActivePage("warnings")}
           >
-            Warnings {warnings.length > 0 && `(${warnings.length})`}
+            <svg className="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3 2 21h20L12 3z M12 9v5 M12 17h.01" /></svg>
+            <span className="nav-label">Warnings {warnings.length > 0 && `(${warnings.length})`}</span>
           </button>
         </nav>
 
-        <button className="clear-button" onClick={clearAllData}>
-          Clear employees & shifts
+        <button className="clear-button" onClick={clearAllData} aria-label="Clear employees and shifts" title="Clear employees and shifts">
+          <svg className="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 6h18 M9 6V3h6v3 M5 6l1 15h12l1-15 M10 10v7 M14 10v7" /></svg>
+          <span className="nav-label">Clear employees &amp; shifts</span>
         </button>
       </aside>
 
-      <main>
+      <main data-page={activePage}>
+        {blockedStorage && (
+          <div className="notice" role="alert">
+            Some local data could not be loaded ({blockedStorage}). Existing stored
+            data has not been replaced. Changes to these records will not be saved
+            in this session. Keep any original backups before closing or reloading.
+          </div>
+        )}
+        {failedStorage && (
+          <div className="notice" role="alert">
+            Changes could not be saved locally ({failedStorage}). Export a backup
+            before closing or reloading to keep your current changes.
+          </div>
+        )}
         <input
           ref={backupFileInputRef}
           className="backup-file-input"
@@ -1314,46 +1208,49 @@ function App() {
           onChange={importBackupFile}
         />
 
-        <header className="page-header">
-          <div>
-            <p>Bakery operations</p>
-            <h1>Smart Shift Planner</h1>
-            <span>
-              Build and manage a separate schedule for every week.
-            </span>
+        <header className="page-header workspace-toolbar" aria-label="Workspace appearance">
+          <div className="theme-toggle-group" role="group" aria-label="Theme selection">
+            <button
+              type="button"
+              className={`theme-toggle-btn ${themePreference === "light" ? "active" : ""}`}
+              onClick={() => setTheme("light")}
+              aria-pressed={themePreference === "light"}
+              title="Switch to Light theme"
+            >
+              Light
+            </button>
+            <button
+              type="button"
+              className={`theme-toggle-btn ${themePreference === "dark" ? "active" : ""}`}
+              onClick={() => setTheme("dark")}
+              aria-pressed={themePreference === "dark"}
+              title="Switch to Dark theme"
+            >
+              Dark
+            </button>
+            <button
+              type="button"
+              className={`theme-toggle-btn ${themePreference === "system" ? "active" : ""}`}
+              onClick={() => setTheme("system")}
+              aria-pressed={themePreference === "system"}
+              title="Follow system preference"
+            >
+              System
+            </button>
           </div>
         </header>
 
-        <section className="summary">
-          <article>
-            <span>Employees</span>
-            <strong>{employees.length}</strong>
-          </article>
-          <article>
-            <span>Shifts</span>
-            <strong>{visibleWeekShifts.length}</strong>
-          </article>
-          <article>
-            <span>Departments</span>
-            <strong>{departments.length}</strong>
-          </article>
-          <article className={warnings.length ? "warning" : ""}>
-            <span>Warnings</span>
-            <strong>{warnings.length}</strong>
-          </article>
-        </section>
-
         {activePage === "schedule" && (
           <div
-            className={`two-panel-layout ${scheduleView === "grid" ? "grid-view-layout" : ""
+            className={`two-panel-layout schedule-workspace ${scheduleView === "grid" ? "grid-view-layout" : ""
               }`}
           >
             <section className="panel printable-schedule">
               <div className="panel-title week-panel-title">
                 <div>
-                  <h2>{formatWeekRange(selectedWeekStart)}</h2>
+                  <h1>Weekly schedule</h1>
                   <p>
-                    Monday to Sunday weekly schedule.
+                    {formatWeekRange(selectedWeekStart)}
                     {selectedWeekStart ===
                       toLocalISODate(getMonday()) && (
                         <span className="current-week-label">
@@ -1364,6 +1261,7 @@ function App() {
                 </div>
 
                 <div className="schedule-toolbar">
+                  <button type="button" className="primary" ref={addEntryButtonRef} onClick={startAddingEntry}>Add entry</button>
                   <div className="view-switcher">
                     <button
                       type="button"
@@ -1448,18 +1346,18 @@ function App() {
               </div>
 
               <div className="print-header">
-                <h1>Bakery Weekly Schedule</h1>
+                <h1>Harborlane Artisan Bakery – Weekly Schedule</h1>
                 <p>{formatWeekRange(selectedWeekStart)}</p>
               </div>
 
               {scheduleView === "grid" ? (
-                <div className="schedule-grid-wrapper">
+                <div className="schedule-grid-wrapper" tabIndex={0} role="region" aria-label="Weekly schedule, scroll horizontally to see all days">
                   <div className="schedule-grid">
                     <div className="grid-corner">Employee</div>
 
                     {DAYS.map((day, dayIndex) => (
                       <div className="grid-day-header" key={day}>
-                        <strong>{day.slice(0, 3)}</strong>
+                        <strong>{day}</strong>
                         <span>
                           {formatDayDate(
                             selectedWeekStart,
@@ -1472,8 +1370,8 @@ function App() {
                     {employees.map((employee) => (
                       <Fragment key={employee.id}>
                         <div className="grid-employee">
-                          <div className="avatar">
-                            {employee.name[0].toUpperCase()}
+                          <div className="avatar" aria-hidden="true" style={{ background: getAvatarColor(employee.name).bg, color: getAvatarColor(employee.name).text }}>
+                            {getAvatarInitials(employee.name)}
                           </div>
                           <div>
                             <strong>{employee.name}</strong>
@@ -1505,6 +1403,7 @@ function App() {
                               <button
                                 type="button"
                                 className="grid-add-button"
+                                aria-label={`Add entry for ${employee.name} on ${day}`}
                                 onClick={() =>
                                   startAddingFromGrid(
                                     employee.id,
@@ -1556,7 +1455,7 @@ function App() {
                                         </span>
                                       </div>
 
-                                      <b>
+                                      <b className="grid-department-badge" style={shift.type === "shift" ? badgeColors(department?.color) : undefined}>
                                         {shift.type === "shift"
                                           ? department?.name || "Unknown"
                                           : shift.type === "vacation"
@@ -1587,6 +1486,7 @@ function App() {
                                       <div className="grid-card-actions">
                                         <button
                                           type="button"
+                                          aria-label={`Edit entry for ${employee.name} on ${day}`}
                                           onClick={() =>
                                             startEditingShift(shift)
                                           }
@@ -1595,6 +1495,7 @@ function App() {
                                         </button>
                                         <button
                                           type="button"
+                                          aria-label={`Delete entry for ${employee.name} on ${day}`}
                                           onClick={() =>
                                             deleteShift(shift.id)
                                           }
@@ -1668,8 +1569,8 @@ function App() {
                                   key={employee.id}
                                 >
                                   <div className="list-employee-header">
-                                    <div className="avatar">
-                                      {employee.name[0].toUpperCase()}
+                                    <div className="avatar" aria-hidden="true" style={{ background: getAvatarColor(employee.name).bg, color: getAvatarColor(employee.name).text }}>
+                                      {getAvatarInitials(employee.name)}
                                     </div>
 
                                     <div>
@@ -1714,10 +1615,6 @@ function App() {
                                         <div
                                           className="list-entry-card"
                                           key={entry.id}
-                                          style={{
-                                            borderLeftColor:
-                                              entryColor,
-                                          }}
                                         >
                                           <div className="list-entry-time">
                                             <strong>
@@ -1745,14 +1642,7 @@ function App() {
                                                 <div className="list-shift-heading">
                                                   <span
                                                     className="list-entry-badge"
-                                                    style={{
-                                                      backgroundColor:
-                                                        entryColor,
-                                                      color:
-                                                        getContrastText(
-                                                          entryColor,
-                                                        ),
-                                                    }}
+                                                    style={badgeColors(entryColor)}
                                                   >
                                                     {entryTitle}
                                                   </span>
@@ -1781,14 +1671,7 @@ function App() {
                                               <>
                                                 <span
                                                   className="list-entry-badge"
-                                                  style={{
-                                                    backgroundColor:
-                                                      entryColor,
-                                                    color:
-                                                      getContrastText(
-                                                        entryColor,
-                                                      ),
-                                                  }}
+                                                  style={badgeColors(entryColor)}
                                                 >
                                                   {entryTitle}
                                                 </span>
@@ -1828,6 +1711,7 @@ function App() {
 
                                             <button
                                               className="delete"
+                                              aria-label={`Delete entry for ${employee.name} on ${day}`}
                                               onClick={() =>
                                                 deleteShift(entry.id)
                                               }
@@ -1851,14 +1735,16 @@ function App() {
               )}
             </section>
 
-            <aside
+            {shiftEditorOpen && <dialog
               ref={shiftFormRef}
-              className={`panel sticky-panel shift-form-panel ${highlightShiftForm ? "form-highlight" : ""
-                }`}
+              className="panel shift-form-panel shift-editor-drawer"
+              aria-modal="true"
+              aria-labelledby="shift-editor-title"
+              onCancel={(event) => { event.preventDefault(); closeShiftEditor(); }}
             >
               <div className="panel-title shift-form-title">
                 <div>
-                  <h2>
+                  <h2 id="shift-editor-title">
                     {editingShiftId
                       ? "Edit Schedule Entry"
                       : "Add Schedule Entry"}
@@ -1867,6 +1753,7 @@ function App() {
                     {formatWeekRange(selectedWeekStart)}
                   </p>
                 </div>
+                <button type="button" className="secondary" ref={shiftEditorCloseRef} onClick={closeShiftEditor}>Close</button>
               </div>
 
               <div className="shift-form-week-controls">
@@ -1926,6 +1813,8 @@ function App() {
                 </div>
               ) : (
                 <form className="form" onSubmit={addShift}>
+                  <div className="shift-form-body">
+                  {shiftEditorMessage && <div className="notice" role="alert">{shiftEditorMessage}</div>}
                   <label>
                     Entry type
                     <select
@@ -2245,6 +2134,8 @@ function App() {
                     </label>
                   )}
 
+                  </div>
+
                   <div className="form-actions">
                     <button className="primary" type="submit">
                       {editingShiftId
@@ -2255,19 +2146,17 @@ function App() {
                             ? "Add vacation"
                             : "Add unavailability"}
                     </button>
-                    {editingShiftId && (
-                      <button
+                    <button
                         className="secondary"
                         type="button"
-                        onClick={cancelEditingShift}
+                        onClick={closeShiftEditor}
                       >
                         Cancel
                       </button>
-                    )}
                   </div>
                 </form>
               )}
-            </aside>
+            </dialog>}
           </div>
         )}
 
@@ -2276,8 +2165,8 @@ function App() {
             <section className="panel">
               <div className="panel-title">
                 <div>
-                  <h2>Employees</h2>
-                  <p>The list starts empty.</p>
+                  <h1>Employees</h1>
+                  <p>{employees.length} {employees.length === 1 ? "employee" : "employees"}</p>
                 </div>
               </div>
 
@@ -2294,8 +2183,8 @@ function App() {
                       className="employee"
                       key={employee.id}
                     >
-                      <div className="avatar">
-                        {employee.name[0].toUpperCase()}
+                      <div className="avatar" aria-hidden="true" style={{ background: getAvatarColor(employee.name).bg, color: getAvatarColor(employee.name).text }}>
+                        {getAvatarInitials(employee.name)}
                       </div>
 
                       <div className="employee-info">
@@ -2415,7 +2304,7 @@ function App() {
             <section className="panel">
               <div className="panel-title">
                 <div>
-                  <h2>Departments & Tasks</h2>
+                  <h1>Departments &amp; tasks</h1>
                   <p>Add departments and tasks at any time.</p>
                 </div>
               </div>
@@ -2608,7 +2497,7 @@ function App() {
           <section className="panel backup-panel">
             <div className="panel-title">
               <div>
-                <h2>Backup & Restore</h2>
+                <h1>Backup &amp; restore</h1>
                 <p>Move all bakery data between computers, phones, or browsers.</p>
               </div>
             </div>
@@ -2676,8 +2565,8 @@ function App() {
           <section className="panel">
             <div className="panel-title">
               <div>
-                <h2>Warnings</h2>
-                <p>Review conflicts before using the schedule.</p>
+                <h1>Schedule warnings</h1>
+                <p>{warnings.length} {warnings.length === 1 ? "warning" : "warnings"} ? {formatWeekRange(selectedWeekStart)}</p>
               </div>
             </div>
 
@@ -2730,7 +2619,7 @@ function App() {
 
             <div className="print-preview-page">
               <div className="preview-title">
-                <h1>Bakery Weekly Schedule</h1>
+                <h1>Harborlane Artisan Bakery – Weekly Schedule</h1>
                 <p>{formatWeekRange(selectedWeekStart)}</p>
               </div>
 
