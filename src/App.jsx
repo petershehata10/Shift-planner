@@ -1,5 +1,6 @@
 import { Fragment, useMemo, useRef, useState } from "react";
 import "./App.css";
+import "./styles/schedule.css";
 import {
   DAYS, toLocalISODate, getMonday, addDays, parseLocalDate,
   formatWeekRange, formatDayDate, snapTimeToQuarterHour,
@@ -10,6 +11,7 @@ import { useSavedArray } from "./lib/useSavedArray.js";
 import { hasDuplicateEmployeeName } from "./lib/employees.js";
 import { useTheme } from "./lib/useTheme.js";
 import { getAvatarColor, getAvatarInitials } from "./lib/avatars.js";
+import { badgeColors } from "./lib/badgeColors.js";
 
 const DEFAULT_DEPARTMENTS = [
   {
@@ -1322,13 +1324,13 @@ function App() {
               </div>
 
               {scheduleView === "grid" ? (
-                <div className="schedule-grid-wrapper">
+                <div className="schedule-grid-wrapper" tabIndex={0} role="region" aria-label="Weekly schedule, scroll horizontally to see all days">
                   <div className="schedule-grid">
                     <div className="grid-corner">Employee</div>
 
                     {DAYS.map((day, dayIndex) => (
                       <div className="grid-day-header" key={day}>
-                        <strong>{day.slice(0, 3)}</strong>
+                        <strong>{day}</strong>
                         <span>
                           {formatDayDate(
                             selectedWeekStart,
@@ -1374,6 +1376,7 @@ function App() {
                               <button
                                 type="button"
                                 className="grid-add-button"
+                                aria-label={`Add entry for ${employee.name} on ${day}`}
                                 onClick={() =>
                                   startAddingFromGrid(
                                     employee.id,
@@ -1425,7 +1428,7 @@ function App() {
                                         </span>
                                       </div>
 
-                                      <b>
+                                      <b className="grid-department-badge" style={shift.type === "shift" ? badgeColors(department?.color) : undefined}>
                                         {shift.type === "shift"
                                           ? department?.name || "Unknown"
                                           : shift.type === "vacation"
@@ -1456,6 +1459,7 @@ function App() {
                                       <div className="grid-card-actions">
                                         <button
                                           type="button"
+                                          aria-label={`Edit entry for ${employee.name} on ${day}`}
                                           onClick={() =>
                                             startEditingShift(shift)
                                           }
@@ -1464,6 +1468,7 @@ function App() {
                                         </button>
                                         <button
                                           type="button"
+                                          aria-label={`Delete entry for ${employee.name} on ${day}`}
                                           onClick={() =>
                                             deleteShift(shift.id)
                                           }
@@ -1610,14 +1615,7 @@ function App() {
                                                 <div className="list-shift-heading">
                                                   <span
                                                     className="list-entry-badge"
-                                                    style={{
-                                                      backgroundColor:
-                                                        entryColor,
-                                                      color:
-                                                        getContrastText(
-                                                          entryColor,
-                                                        ),
-                                                    }}
+                                                    style={badgeColors(entryColor)}
                                                   >
                                                     {entryTitle}
                                                   </span>
@@ -1646,14 +1644,7 @@ function App() {
                                               <>
                                                 <span
                                                   className="list-entry-badge"
-                                                  style={{
-                                                    backgroundColor:
-                                                      entryColor,
-                                                    color:
-                                                      getContrastText(
-                                                        entryColor,
-                                                      ),
-                                                  }}
+                                                  style={badgeColors(entryColor)}
                                                 >
                                                   {entryTitle}
                                                 </span>
@@ -1693,6 +1684,7 @@ function App() {
 
                                             <button
                                               className="delete"
+                                              aria-label={`Delete entry for ${employee.name} on ${day}`}
                                               onClick={() =>
                                                 deleteShift(entry.id)
                                               }
